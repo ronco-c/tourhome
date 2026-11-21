@@ -329,6 +329,15 @@
   .ac button small{color:var(--faint);font-size:12px;flex:none}
   .ac button.rg{color:#ffb397;font-weight:700}
 
+  /* ================= CLEAN VIEW (press & hold) ================= */
+  .card{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+  .card .info,.card .actions,.card .chapters,.card .seg-bar,.card .shade,#scr-feed .topbar,nav{transition:opacity .2s ease,transform .25s ease}
+  .app.clean .card .info,.app.clean .card .actions,.app.clean .card .chapters,.app.clean .card .seg-bar,.app.clean .card .shade,
+  .app.clean #scr-feed .topbar,.app.clean .roomflash,.app.clean .soundhint,.app.clean .paused-ind{opacity:0;pointer-events:none}
+  .app.clean nav{transform:translateY(100%);opacity:0}
+  .app.clean .toast{opacity:0!important}
+  .app.clean #scr-feed{bottom:0}
+
   /* ================= COMMENTS ================= */
   #cmtSheet{display:flex;flex-direction:column;height:72%;max-height:72%;overflow:hidden;padding-bottom:0}
   #cmtSheet h2{font-size:17px;text-align:center;margin:0 0 12px}
@@ -784,8 +793,19 @@ function wireCard(c,l,ch){
   c.querySelector('.poster-mini').onclick=e=>{e.stopPropagation();if(l.owner==='agent')openAgent(agentKey(l));else openDetails(l,v);};
   c.querySelector('.visit').addEventListener('click',()=>bump(l,'wa'));
   chips.forEach(b=>b.onclick=e=>{e.stopPropagation();v.currentTime=ch[+b.dataset.i].t+0.01;safePlay(v);});
+  /* press & hold: hide everything and show only the video, restore on release */
+  let holdT=null,held=false,sx=0,sy=0;
+  c.addEventListener('pointerdown',e=>{
+    if(e.composedPath().some(n=>n.matches&&n.matches('.actions,.chapters,.info,.soundhint')))return;
+    sx=e.clientX;sy=e.clientY;clearTimeout(holdT);holdT=setTimeout(()=>{held=true;setClean(true);},350);
+  });
+  c.addEventListener('pointermove',e=>{if(holdT&&!held&&Math.hypot(e.clientX-sx,e.clientY-sy)>10){clearTimeout(holdT);holdT=null;}});
+  const endHold=()=>{clearTimeout(holdT);holdT=null;if(held){held=false;c._skipClick=true;setTimeout(()=>c._skipClick=false,400);setClean(false);}};
+  ['pointerup','pointercancel','pointerleave'].forEach(ev=>c.addEventListener(ev,endHold));
+  c.addEventListener('contextmenu',e=>e.preventDefault());
   let lastTap=0,tapT;
   c.addEventListener('click',e=>{
+    if(c._skipClick){c._skipClick=false;return;}
     /* composedPath() keeps the original path even if the tapped icon was re-rendered during the click */
     const path=e.composedPath(),inside=sel=>path.some(n=>n.matches&&n.matches(sel));
     if(inside('.actions,.chapters,.badges,.soundhint,.poster-mini'))return;
@@ -1210,6 +1230,14 @@ function resetWizard(){
   segInit($('#dealSeg'),'rent',setDeal);setDeal('rent');segInit($('#ownerSeg'),wiz.owner,v=>wiz.owner=v);
   $('#prev1').removeAttribute('src');$('#prev2').removeAttribute('src');$('#drop').classList.remove('hidden');$('#vp1').classList.add('hidden');
   wiz.step=1;
+}
+
+/* ================= CLEAN VIEW ================= */
+function setClean(on){
+  const f=$('#feed'),idx=Math.round(f.scrollTop/(f.clientHeight||1));
+  $('#app').classList.toggle('clean',on);
+  f.style.scrollSnapType='none';f.scrollTop=idx*f.clientHeight;          /* keep the same video in place after the resize */
+  requestAnimationFrame(()=>{f.scrollTop=idx*f.clientHeight;f.style.scrollSnapType='';});
 }
 
 /* ================= SOUND ================= */
