@@ -106,6 +106,9 @@
   .paused-ind svg{width:34px;height:34px;margin-left:4px}
   .roomflash{position:absolute;top:calc(116px + var(--safe-t));left:50%;transform:translate(-50%,-6px);padding:6px 14px;border-radius:999px;
     background:rgba(0,0,0,.5);backdrop-filter:blur(10px);font-weight:700;font-size:14px;opacity:0;transition:all .3s var(--ease);pointer-events:none}
+  .soundhint{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;
+    background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);font-weight:700;font-size:14px;z-index:3}
+  .soundhint svg{width:18px;height:18px}
   .roomflash.show{opacity:1;transform:translate(-50%,0)}
 
   .empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;gap:12px}
@@ -692,7 +695,7 @@ const filtersActive=()=>!!(filters.region||filters.city||filters.max||filters.ro
 const io=new IntersectionObserver(es=>{es.forEach(e=>{
   const v=e.target.querySelector('video');if(!v)return;
   if(e.isIntersecting&&e.intersectionRatio>.6&&current==='feed'){
-    ensureSrc(e.target).then(()=>{v.muted=muted;v.play().catch(()=>{});});
+    ensureSrc(e.target).then(()=>safePlay(v));
     const n=e.target.nextElementSibling;if(n)ensureSrc(n);
     bumpView(e.target.dataset.id);
   }else v.pause();
@@ -700,7 +703,7 @@ const io=new IntersectionObserver(es=>{es.forEach(e=>{
 async function ensureSrc(card){const v=card.querySelector('video');if(!v||v.src)return;v.src=await videoURL(card.dataset.id);}
 function pauseAll(){$$('#feed video').forEach(v=>v.pause());}
 function playVisible(){const f=$('#feed');const c=f.children[Math.round(f.scrollTop/(f.clientHeight||1))];
-  const v=c?.querySelector('video');if(v)ensureSrc(c).then(()=>{v.muted=muted;v.play().catch(()=>{});});}
+  const v=c?.querySelector('video');if(v)ensureSrc(c).then(()=>safePlay(v));}
 const viewed=new Set();
 function bumpView(id){if(viewed.has(id))return;viewed.add(id);const l=listings.find(x=>x.id===id);if(l){l.views=(l.views||0)+1;store.update(l);}}
 
@@ -735,6 +738,7 @@ function buildCard(l){
     <svg class="bigheart" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.5 3 4.5 6.8 4.5c2.2 0 3.6 1.2 5.2 3 1.6-1.8 3-3 5.2-3 3.8 0 5.9 4 4.4 7.3C19.5 16.4 12 21 12 21z"/></svg>
     <div class="paused-ind hidden">${I.play}</div>
     <div class="roomflash"></div>
+    <button class="soundhint hidden">${I.vol}הקישו לצליל</button>
     <div class="info">
       <button class="poster-mini"><span class="av">${esc((l.name||'?').trim()[0]||'?')}</span>${esc(l.name)}${l.verified?TICK:''}${l.agency?`<span class="ag">· ${esc(l.agency)}</span>`:''}</button>
       <div class="badges">${isBoosted(l)?'<span class="badge boost">מקודם</span>':''}<span class="badge deal ${l.deal}">${dealLabel(l)}</span>${(l.owner||'private')==='private'?'<span class="badge priv">ללא תיווך</span>':'<span class="badge">תיווך</span>'}${l.entry?`<span class="badge">כניסה: ${esc(l.entry)}</span>`:''}</div>
@@ -774,23 +778,24 @@ function wireCard(c,l,ch){
       const cs=chips[idx]?.parentElement;if(cs){const b=chips[idx];cs.scrollTo({left:b.offsetLeft-cs.clientWidth/2+b.clientWidth/2,behavior:'smooth'});}
       if(t>0.3){flash.textContent=ch[idx].room;flash.classList.add('show');clearTimeout(flashT);flashT=setTimeout(()=>flash.classList.remove('show'),1300);}}
   });
-  v.addEventListener('play',()=>pi.classList.add('hidden'));
+  v.addEventListener('play',()=>{v._userPause=false;pi.classList.add('hidden');});
   v.addEventListener('pause',()=>{lastT=null;store.update(l);});
   v.addEventListener('seeking',()=>{lastT=null;});
   c.querySelector('.poster-mini').onclick=e=>{e.stopPropagation();if(l.owner==='agent')openAgent(agentKey(l));else openDetails(l,v);};
   c.querySelector('.visit').addEventListener('click',()=>bump(l,'wa'));
-  chips.forEach(b=>b.onclick=e=>{e.stopPropagation();v.currentTime=ch[+b.dataset.i].t+0.01;v.play().catch(()=>{});});
+  chips.forEach(b=>b.onclick=e=>{e.stopPropagation();v.currentTime=ch[+b.dataset.i].t+0.01;safePlay(v);});
   let lastTap=0,tapT;
   c.addEventListener('click',e=>{
-    if(e.target.closest('.actions,.chapters,.badges'))return;
-    if(e.target.closest('.info')){openDetails(l,v);return;}
+    /* composedPath() keeps the original path even if the tapped icon was re-rendered during the click */
+    const path=e.composedPath(),inside=sel=>path.some(n=>n.matches&&n.matches(sel));
+    if(inside('.actions,.chapters,.badges,.soundhint,.poster-mini'))return;
+    if(inside('.info')){openDetails(l,v);return;}
     const now=Date.now();
     if(now-lastTap<280){clearTimeout(tapT);lastTap=0;doLike(c,l,true);return;}
-    lastTap=now;tapT=setTimeout(()=>{if(v.paused)v.play().catch(()=>{});else{v.pause();pi.classList.remove('hidden');}},280);
+    lastTap=now;tapT=setTimeout(()=>{if(v.paused)safePlay(v);else{v._userPause=true;v.pause();pi.classList.remove('hidden');}},280);
   });
-  c.querySelector('.mute').onclick=()=>{muted=!muted;
-    $$('#feed .act.mute').forEach(b=>b.innerHTML=`<span class="ic">${muted?I.mute:I.vol}</span>${muted?'קול':'השתק'}`);
-    $$('#feed video').forEach(x=>x.muted=muted);};
+  c.querySelector('.mute').onclick=()=>setMuted(!muted,v);
+  c.querySelector('.soundhint').onclick=e=>{e.stopPropagation();setMuted(false,v);};
   c.querySelector('.like').onclick=()=>doLike(c,l,false);
   c.querySelector('.cmtbtn').onclick=()=>openComments(l);
   c.querySelector('.save').onclick=e=>{const on=!saved.has(l.id);on?saved.add(l.id):saved.delete(l.id);LS.set('saved',[...saved]);bump(l,'saves',on?1:-1);
@@ -851,7 +856,7 @@ function openDetails(l,video){
   if(l.deal==='sale'){const calc=()=>{const dp=+$('#mDown').value,yr=+$('#mYears').value,P=l.price*(1-dp/100),r=MORT_RATE/12,n=yr*12;
       $('#mRes').textContent='₪'+fmt(Math.round(P*r/(1-Math.pow(1+r,-n))))+' לחודש';$('#mDownL').textContent=`${dp}% · ₪${fmt(Math.round(l.price*dp/100))}`;$('#mYearsL').textContent=yr+' שנים';};
     $('#mDown').oninput=calc;$('#mYears').oninput=calc;calc();}
-  $$('#detailBody .roomnav button').forEach(b=>b.onclick=()=>{video.currentTime=ch[+b.dataset.i].t+0.01;video.play().catch(()=>{});closeSheets();});
+  $$('#detailBody .roomnav button').forEach(b=>b.onclick=()=>{video.currentTime=ch[+b.dataset.i].t+0.01;safePlay(video);closeSheets();});
   $('#reportBtn')?.addEventListener('click',()=>{if(!confirm('לדווח על המודעה? היא תוסתר אצלך מיד.'))return;
     reported.add(l.id);LS.set('reported',[...reported]);closeSheets();renderFeed();toast('תודה — המודעה דווחה');});
   openSheet('#detailSheet');
@@ -1205,6 +1210,39 @@ function resetWizard(){
   segInit($('#dealSeg'),'rent',setDeal);setDeal('rent');segInit($('#ownerSeg'),wiz.owner,v=>wiz.owner=v);
   $('#prev1').removeAttribute('src');$('#prev2').removeAttribute('src');$('#drop').classList.remove('hidden');$('#vp1').classList.add('hidden');
   wiz.step=1;
+}
+
+/* ================= SOUND ================= */
+/* iOS lets a video play with sound only after the user tapped for that element.
+   If the browser refuses, keep the video playing muted and offer a one-tap "sound on". */
+function syncMuteUI(){
+  $$('#feed .act.mute').forEach(b=>b.innerHTML=`<span class="ic">${muted?I.mute:I.vol}</span>${muted?'קול':'השתק'}`);
+  if(muted)$$('#feed .soundhint').forEach(h=>h.classList.add('hidden'));
+}
+function safePlay(v){
+  const hint=v.closest('.card')?.querySelector('.soundhint');
+  v.muted=muted;
+  const p=v.play();
+  if(p&&p.then)p.then(()=>{if(hint)hint.classList.toggle('hidden',muted||!v.muted);}).catch(()=>{
+    if(!v.muted){v.muted=true;v.play().then(()=>{if(hint&&!muted)hint.classList.remove('hidden');}).catch(()=>{});}
+  });
+}
+function setMuted(m,cur){
+  muted=m;LS.set('muted',m);
+  const wasPlaying=cur&&!cur.paused;
+  $$('#feed video').forEach(x=>{if(x!==cur)x.muted=muted;});
+  if(cur){
+    cur.muted=muted;cur._guard=Date.now();cur._retry=0;
+    if(!cur._guarded){cur._guarded=true;
+      cur.addEventListener('pause',()=>{
+        if(cur._userPause||current!=='feed'||Date.now()-cur._guard>1500)return;
+        const r=cur.getBoundingClientRect();if(Math.abs(r.top)>r.height/2)return;      /* scrolled away: leave it */
+        if(cur._retry++<1)setTimeout(()=>safePlay(cur),0);                           /* resume */
+        else{cur.muted=true;cur.play().catch(()=>{});cur.closest('.card')?.querySelector('.soundhint')?.classList.remove('hidden');}
+      });}
+    if(wasPlaying||!muted)safePlay(cur);   /* keep playing; called inside the tap so iOS allows sound */
+  }
+  syncMuteUI();
 }
 
 /* ================= COMMENTS ================= */
