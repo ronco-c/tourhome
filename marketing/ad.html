@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>TourHome Ad</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  /* 45s vertical ad, 540x960 stage (rendered at 2x = 1080x1920). Timeline is driven by render(t). */
+  :root{--bg:#0d0c0b;--ink:#f6f1ea;--muted:rgba(246,241,234,.62);--brand:#ff6b3d;--surface:#171513;--surface2:#221f1c}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:540px;height:960px;overflow:hidden;background:var(--bg);font-family:Heebo,Arial,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+  #stage{position:relative;width:540px;height:960px;overflow:hidden;background:var(--bg)}
+  .abs{position:absolute}
+  .glow{position:absolute;width:900px;height:900px;border-radius:50%;left:-180px;top:-120px;
+    background:radial-gradient(circle,rgba(255,107,61,.20) 0%,rgba(255,107,61,.06) 35%,transparent 65%);pointer-events:none}
+  .t{position:absolute;left:0;right:0;text-align:center;opacity:0;will-change:transform,opacity}
+  .big{font-size:58px;font-weight:900;letter-spacing:-1.5px;line-height:1.05}
+  .mid{font-size:40px;font-weight:800;letter-spacing:-.8px;line-height:1.15}
+  .sm{font-size:22px;font-weight:500;color:var(--muted)}
+  .o{color:var(--brand)}
+  .strike{position:absolute;height:6px;background:var(--brand);border-radius:3px;top:50%;margin-top:-3px;right:50%;transform-origin:right center}
+  /* logo */
+  #logo{position:absolute;left:0;right:0;top:340px;display:flex;flex-direction:column;align-items:center;gap:22px;opacity:0}
+  #logoRow{display:flex;align-items:center;gap:16px;direction:ltr}
+  #mark{width:92px;height:92px}
+  #word{font-size:72px;font-weight:900;letter-spacing:-3px;line-height:1}
+  #word i{font-style:normal;color:var(--brand)}
+  #tag{font-size:30px;font-weight:700;color:var(--muted);letter-spacing:-.3px}
+  /* phone */
+  #phone{position:absolute;left:120px;top:250px;width:300px;height:630px;border-radius:48px;background:#1a1816;padding:10px;
+    box-shadow:0 0 0 1.5px #34302c,0 40px 90px rgba(0,0,0,.7),0 0 120px rgba(255,107,61,.12);opacity:0}
+  #screen{position:relative;width:280px;height:610px;border-radius:38px;overflow:hidden;background:#000}
+  #island{position:absolute;top:10px;left:50%;width:84px;height:24px;margin-left:-42px;border-radius:14px;background:#000;z-index:20}
+  #strip{position:absolute;left:0;top:0;width:280px}
+  .card{position:relative;width:280px;height:610px;overflow:hidden}
+  .room{position:absolute;inset:0}
+  .room svg{position:absolute;inset:0;width:100%;height:100%}
+  .shade{position:absolute;inset:0;background:linear-gradient(to top,rgba(8,7,6,.9) 0%,rgba(8,7,6,.45) 30%,rgba(8,7,6,0) 55%),linear-gradient(to bottom,rgba(8,7,6,.5),rgba(8,7,6,0) 18%)}
+  .ui-top{position:absolute;top:44px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700}
+  .ui-top .wm{font-weight:800;direction:ltr;font-size:13px}
+  .ui-top .wm i{font-style:normal;color:var(--brand)}
+  .ui-tabs{display:flex;gap:12px;color:var(--muted)}
+  .ui-tabs b{color:var(--ink)}
+  .acts{position:absolute;left:10px;bottom:118px;display:flex;flex-direction:column;gap:12px}
+  .ac{width:36px;height:36px;border-radius:50%;background:rgba(20,18,16,.45);display:grid;place-items:center}
+  .ac svg{width:18px;height:18px}
+  .ac.or{background:var(--brand)}
+  .info{position:absolute;right:14px;left:60px;bottom:96px}
+  .badges{display:flex;gap:5px;margin-bottom:6px}
+  .bd{font-size:9.5px;font-weight:700;padding:3px 7px;border-radius:5px;background:var(--brand)}
+  .bd.g{background:rgba(47,210,122,.2);color:#8ff0b8}
+  .bd.w{background:var(--ink);color:#111}
+  .price{font-size:27px;font-weight:900;letter-spacing:-.6px;line-height:1}
+  .price small{font-size:11px;font-weight:500;color:var(--muted);margin-inline-start:3px}
+  .specs{font-size:12px;font-weight:600;margin-top:5px}
+  .loc{font-size:11px;color:var(--muted);margin-top:4px}
+  .chaps{position:absolute;right:12px;left:12px;bottom:40px;display:flex;gap:5px}
+  .chap{flex:none;padding:6px 9px;border-radius:999px;font-size:10.5px;font-weight:700;background:rgba(255,255,255,.14);transition:none}
+  .chap.on{background:var(--ink);color:#111}
+  .segs{position:absolute;left:10px;right:10px;bottom:28px;height:3px;display:flex;gap:3px}
+  .segs span{flex:1;border-radius:2px;background:rgba(255,255,255,.25);overflow:hidden;position:relative}
+  .segs i{position:absolute;inset:0;width:0;background:var(--ink)}
+  .nav{position:absolute;left:0;right:0;bottom:0;height:24px;background:#0d0c0b}
+  .flash{position:absolute;top:80px;left:50%;transform:translateX(-50%);padding:5px 12px;border-radius:999px;background:rgba(0,0,0,.55);font-size:12px;font-weight:700;opacity:0;white-space:nowrap}
+  /* filter sheet */
+  #sheet{position:absolute;left:0;right:0;bottom:0;height:360px;background:#171513;border-radius:24px 24px 0 0;padding:14px 16px;z-index:10;transform:translateY(100%)}
+  #sheet .grab{width:34px;height:4px;border-radius:2px;background:rgba(246,241,234,.2);margin:0 auto 14px}
+  #sheet h4{font-size:17px;font-weight:800;margin-bottom:12px}
+  .lbl{font-size:11px;color:var(--muted);font-weight:600;margin:10px 0 6px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .cp{padding:6px 11px;border-radius:999px;border:1px solid rgba(246,241,234,.2);font-size:11.5px;font-weight:600}
+  .cp.on{border-color:var(--ink);background:var(--ink);color:#111}
+  #rms .cp{direction:ltr;unicode-bidi:isolate}
+  .range{position:relative;height:4px;border-radius:2px;background:rgba(246,241,234,.15);margin:14px 4px 6px}
+  .range i{position:absolute;right:0;top:0;bottom:0;background:var(--brand);border-radius:2px}
+  .range b{position:absolute;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:var(--ink)}
+  .rangev{font-size:12px;font-weight:700;text-align:left;direction:ltr}
+  .sbtn{margin-top:16px;height:42px;border-radius:12px;background:var(--brand);display:grid;place-items:center;font-weight:800;font-size:14px}
+  .ripple{position:absolute;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.55);opacity:0;pointer-events:none;z-index:15}
+  /* whatsapp */
+  #chat{position:absolute;inset:0;background:#0b141a;z-index:12;opacity:0}
+  #chat .hd{height:92px;background:#1f2c33;display:flex;align-items:flex-end;gap:10px;padding:0 14px 12px}
+  #chat .hd .av{width:34px;height:34px;border-radius:50%;background:var(--brand);display:grid;place-items:center;font-weight:800;font-size:14px}
+  #chat .hd b{display:block;font-size:13px}
+  #chat .hd span{font-size:10px;color:#8696a0}
+  .bub{position:absolute;max-width:200px;padding:9px 12px;border-radius:12px;font-size:12.5px;line-height:1.45;opacity:0}
+  .bub small{display:block;font-size:9px;color:rgba(255,255,255,.55);margin-top:3px;text-align:left}
+  .me{left:12px;background:#005c4b;border-top-left-radius:3px}
+  .them{right:12px;background:#202c33;border-top-right-radius:3px}
+  .typing{position:absolute;right:12px;top:262px;padding:10px 14px;border-radius:12px;background:#202c33;display:flex;gap:4px;opacity:0}
+  .typing i{width:6px;height:6px;border-radius:50%;background:#8696a0}
+  /* agents stats */
+  #stats{position:absolute;left:40px;right:40px;top:330px;padding:26px 24px;border-radius:26px;background:var(--surface);border:1px solid rgba(246,241,234,.08);opacity:0;
+    box-shadow:0 30px 80px rgba(0,0,0,.5)}
+  #stats .hd{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+  #stats .av{width:50px;height:50px;border-radius:50%;background:var(--surface2);border:1px solid rgba(246,241,234,.15);display:grid;place-items:center;font-weight:800;font-size:18px}
+  #stats .nm{font-size:19px;font-weight:800;display:flex;align-items:center;gap:6px}
+  #stats .sub{font-size:13px;color:var(--muted)}
+  .tick{width:18px;height:18px;border-radius:50%;background:#3aa0ff;display:inline-grid;place-items:center}
+  .tick svg{width:11px;height:11px}
+  .bar{display:grid;grid-template-columns:86px 1fr 52px;align-items:center;gap:12px;margin:12px 0;font-size:15px;font-weight:600}
+  .bar .tr{height:12px;border-radius:6px;background:var(--surface2);overflow:hidden}
+  .bar .tr i{display:block;height:100%;width:0;background:var(--brand);border-radius:6px}
+  .bar .v{text-align:left;direction:ltr;color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+  .insight{margin-top:18px;padding:12px 14px;border-radius:12px;background:rgba(255,107,61,.14);color:#ffc1a8;font-size:14px;line-height:1.5;opacity:0}
+  /* end card */
+  #cta{position:absolute;left:50%;top:640px;transform:translateX(-50%);height:58px;padding:0 34px;border-radius:16px;background:var(--brand);display:grid;place-items:center;
+    font-weight:800;font-size:22px;opacity:0;box-shadow:0 14px 40px rgba(255,107,61,.35);white-space:nowrap}
+  #url{position:absolute;left:0;right:0;top:730px;text-align:center;font-size:17px;color:var(--muted);direction:ltr;opacity:0;letter-spacing:.3px}
+  #fade{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:50}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="glow" id="glow"></div>
+
+  <!-- S1: problem -->
+  <div class="t big" id="p1" style="top:300px">20 תמונות.<span class="strike" id="k1"></span></div>
+  <div class="t big" id="p2" style="top:380px">זווית רחבה.<span class="strike" id="k2"></span></div>
+  <div class="t big" id="p3" style="top:460px">פילטר חמים.<span class="strike" id="k3"></span></div>
+  <div class="t mid" id="p4" style="top:600px">ואז מגיעים לדירה.</div>
+
+  <!-- S2 -->
+  <div class="t mid" id="q1" style="top:360px">הגיע הזמן לראות דירות</div>
+  <div class="t big o" id="q2" style="top:420px">כמו שהן באמת.</div>
+
+  <!-- S3 + S9: logo -->
+  <div id="logo">
+    <div id="logoRow">
+      <svg id="mark" viewBox="0 0 64 64"><path d="M8 29L32 9l24 20v24a3 3 0 01-3 3H11a3 3 0 01-3-3z" fill="#ff6b3d"/><path id="play" d="M27 26v18l15-9z" fill="#fff"/></svg>
+      <div id="word">tourhome<i>.</i></div>
+    </div>
+    <div id="tag">כל דירה. בסיור אחד.</div>
+  </div>
+
+  <!-- captions above the phone -->
+  <div class="t mid" id="c1" style="top:110px">גוללים. רואים.<br><span class="o">מחליטים.</span></div>
+  <div class="t mid" id="c2" style="top:110px">קופצים ישר<br><span class="o">לחדר שמעניין אתכם.</span></div>
+  <div class="t mid" id="c3" style="top:110px">מחפשים לפי אזור,<br><span class="o">מחיר וחדרים.</span></div>
+  <div class="t mid" id="c4" style="top:110px">מתאמים ביקור<br><span class="o">בלחיצה אחת.</span></div>
+  <div class="t mid" id="c5" style="top:130px">למתווכים:<br><span class="o">יודעים איפה הצופים מתעכבים.</span></div>
+
+  <!-- phone -->
+  <div id="phone"><div id="screen">
+    <div id="island"></div>
+    <div id="strip"></div>
+    <div id="sheet">
+      <div class="grab"></div>
+      <h4>מה אתם מחפשים?</h4>
+      <div class="lbl">אזור</div>
+      <div class="chips" id="regs"><span class="cp">צפון</span><span class="cp">חיפה</span><span class="cp">שרון</span><span class="cp">מרכז</span><span class="cp">ירושלים</span><span class="cp">דרום</span></div>
+      <div class="lbl">חדרים</div>
+      <div class="chips" id="rms"><span class="cp">1+</span><span class="cp">2+</span><span class="cp">3+</span><span class="cp">4+</span></div>
+      <div class="lbl">מחיר עד</div>
+      <div class="range"><i id="rngFill"></i><b id="rngKnob"></b></div>
+      <div class="rangev" id="rngVal">₪6,000</div>
+      <div class="sbtn">הצגת דירות</div>
+    </div>
+    <div id="chat">
+      <div class="hd"><div class="av">מ</div><div><b>מיכל לוי</b><span>מתווכת · TourHome</span></div></div>
+      <div class="bub me" id="b1" style="top:120px">היי, ראיתי את הדירה בפלורנטין ב־TourHome. אפשר לתאם ביקור?<small>18:02 ✓✓</small></div>
+      <div class="typing" id="typing"><i></i><i></i><i></i></div>
+      <div class="bub them" id="b2" style="top:262px">בשמחה! מחר ב־18:00 מתאים?<small>18:03</small></div>
+      <div class="bub me" id="b3" style="top:340px">מושלם, נתראה 🙌<small>18:03 ✓✓</small></div>
+    </div>
+    <div class="ripple" id="rip"></div>
+    <div class="nav"></div>
+  </div></div>
+
+  <!-- agents stats -->
+  <div id="stats">
+    <div class="hd"><div class="av">מל</div><div><div class="nm">מיכל לוי <span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></div><div class="sub">זמן צפייה לפי חדר · ממוצע לצופה</div></div></div>
+    <div class="bar"><span>סלון</span><span class="tr"><i id="s1"></i></span><span class="v" id="v1">0.0s</span></div>
+    <div class="bar"><span>מרפסת</span><span class="tr"><i id="s2"></i></span><span class="v" id="v2">0.0s</span></div>
+    <div class="bar"><span>מטבח</span><span class="tr"><i id="s3"></i></span><span class="v" id="v3">0.0s</span></div>
+    <div class="bar"><span>חדר שינה</span><span class="tr"><i id="s4"></i></span><span class="v" id="v4">0.0s</span></div>
+    <div class="insight" id="ins">הצופים מתעכבים הכי הרבה בסלון. מומלץ לפתוח את הסרטון שם.</div>
+  </div>
+
+  <div id="cta">נסו עכשיו</div>
+  <div id="url">ronco-c.github.io/tourhome</div>
+  <div id="fade"></div>
+</div>
+
+<script>
+/* ---------- room illustrations (280x610, warm line art) ---------- */
+const ROOM={
+  living:{g:['#e2c19c','#8a664c'],svg:`<g fill="none" stroke="rgba(255,250,240,.55)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="150" y="120" width="96" height="130" rx="4"/><path d="M198 120v130M150 185h96"/>
+    <rect x="30" y="300" width="200" height="56" rx="16"/><rect x="22" y="330" width="30" height="62" rx="10"/><rect x="208" y="330" width="30" height="62" rx="10"/>
+    <rect x="44" y="350" width="172" height="42" rx="8"/><path d="M60 392v16M200 392v16"/>
+    <path d="M62 170h44l-8 34H70z"/><path d="M84 204v20"/><rect x="40" y="224" width="70" height="4" rx="2"/>
+    <path d="M250 300c-8-20 4-44 18-52M252 300c10-18 2-40-6-50"/><path d="M240 300h24l-4 26h-16z"/></g>`},
+  kitchen:{g:['#eadfcc','#8c7a64'],svg:`<g fill="none" stroke="rgba(255,250,240,.55)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="18" y="140" width="244" height="70" rx="4"/><path d="M79 140v70M140 140v70M201 140v70M70 175h4M131 175h4M192 175h4M253 175h4"/>
+    <path d="M90 60v60M190 60v60"/><path d="M72 120a18 14 0 0136 0zM172 120a18 14 0 0136 0z"/>
+    <rect x="18" y="330" width="244" height="14" rx="3"/><rect x="18" y="344" width="244" height="70" rx="4"/><path d="M79 344v70M140 344v70M201 344v70"/>
+    <rect x="100" y="290" width="44" height="40" rx="4"/><path d="M200 330v-34c0-8 12-8 12 0"/></g>`},
+  bedroom:{g:['#d6b3ad','#5f4a51'],svg:`<g fill="none" stroke="rgba(255,250,240,.55)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="90" y="130" width="100" height="70" rx="4"/><path d="M100 185l26-28 18 18 14-12 22 22"/>
+    <rect x="46" y="250" width="188" height="74" rx="18"/><rect x="34" y="316" width="212" height="86" rx="12"/><path d="M50 402v14M230 402v14"/>
+    <rect x="62" y="296" width="66" height="26" rx="10"/><rect x="152" y="296" width="66" height="26" rx="10"/><path d="M34 350h212"/>
+    <rect x="248" y="330" width="26" height="40" rx="4"/><path d="M261 330v-26M250 304h22l-4-18h-14z"/></g>`},
+  balcony:{g:['#f4c98a','#d9704a'],svg:`<g fill="none" stroke="rgba(255,250,240,.65)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
+    <circle cx="196" cy="160" r="34"/><path d="M20 250h240"/><path d="M40 238c30-14 50-10 70 0s46 12 70 0 40-8 60 0"/>
+    <path d="M14 320h252M14 410h252"/><path d="M34 320v90M64 320v90M94 320v90M124 320v90M154 320v90M184 320v90M214 320v90M244 320v90"/>
+    <path d="M56 410v-30h40v30M60 380c-6-30 10-52 16-58 6 8 18 26 14 58"/>
+    <path d="M190 410l6-44h44l6 44M196 366l-4-30h48l-4 30"/></g>`},
+};
+const roomHTML=k=>`<div class="room" data-room="${k}" style="background:linear-gradient(170deg,${ROOM[k].g[0]},${ROOM[k].g[1]})"><svg viewBox="0 0 280 610">${ROOM[k].svg}</svg></div>`;
+const IC={
+  heart:'<svg viewBox="0 0 24 24" fill="#fff"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.5 3 4.5 6.8 4.5c2.2 0 3.6 1.2 5.2 3 1.6-1.8 3-3 5.2-3 3.8 0 5.9 4 4.4 7.3C19.5 16.4 12 21 12 21z"/></svg>',
+  cmt:'<svg viewBox="0 0 24 24" fill="#fff"><path d="M12 3C6.5 3 2 6.9 2 11.7c0 2.6 1.3 4.9 3.4 6.5L4.6 21.5c-.1.4.3.7.7.5l3.9-2c.9.2 1.8.3 2.8.3 5.5 0 10-3.9 10-8.7S17.5 3 12 3z"/></svg>',
+  save:'<svg viewBox="0 0 24 24" fill="#fff"><path d="M6 3h12a1 1 0 011 1v17l-7-4.5L5 21V4a1 1 0 011-1z"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>',
+};
+function cardHTML(id,rooms,price,unit,deal,specs,loc,chaps){
+  return `<div class="card" id="${id}">${rooms.map(roomHTML).join('')}<div class="shade"></div>
+    <div class="ui-top"><span class="ui-tabs"><b>הכל</b><span>להשכרה</span><span>למכירה</span></span><span class="wm">tourhome<i>.</i></span></div>
+    <div class="flash"></div>
+    <div class="acts"><span class="ac">${IC.heart}</span><span class="ac">${IC.cmt}</span><span class="ac">${IC.save}</span><span class="ac or">${IC.cal}</span></div>
+    <div class="info"><div class="badges"><span class="bd ${deal==='sale'?'w':''}">${deal==='sale'?'למכירה':'להשכרה'}</span><span class="bd g">ללא תיווך</span></div>
+      <div class="price">${price}${unit?`<small>${unit}</small>`:''}</div><div class="specs">${specs}</div><div class="loc">${loc}</div></div>
+    ${chaps?`<div class="chaps">${chaps.map(c=>`<span class="chap">${c}</span>`).join('')}</div>`:''}
+    <div class="segs">${(chaps||[1]).map(()=>'<span><i></i></span>').join('')}</div></div>`;
+}
+const strip=document.getElementById('strip');
+strip.innerHTML=
+  cardHTML('k0',['living','kitchen','bedroom','balcony'],'₪7,200','לחודש','rent','3 חדרים · 80 מ״ר · קומה 3','תל אביב · פלורנטין',['סלון','מטבח','חדר שינה','מרפסת'])+
+  cardHTML('k1',['balcony'],'₪3,150,000','','sale','4 חדרים · 105 מ״ר · קומה 12','רמת גן · הבורסה',null)+
+  cardHTML('k2',['bedroom'],'₪5,400','לחודש','rent','2.5 חדרים · 62 מ״ר','חיפה · כרמל',null);
+
+/* ---------- timeline helpers ---------- */
+const $=id=>document.getElementById(id);
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const P=(t,a,b)=>clamp((t-a)/(b-a));
+const eo=x=>1-Math.pow(1-x,3);
+const eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const back=x=>{const c1=1.5,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2);};
+function text(el,t,a,b,dy=28,fi=.55,fo=.4){            /* slide-up in at a, fade/rise out at b */
+  const i=eo(P(t,a,a+fi)),o=P(t,b-fo,b);
+  el.style.opacity=Math.min(i,1-o);el.style.transform=`translateY(${(1-i)*dy-o*14}px)`;
+}
+const k0=$('k0'),rooms0=[...k0.querySelectorAll('.room')],chips0=[...k0.querySelectorAll('.chap')],bars0=[...k0.querySelectorAll('.segs i')],flash0=k0.querySelector('.flash');
+const ROOMS_T=[20.6,22.2,23.8,25.4];               /* room changes inside scene 5 */
+const ROOM_NAMES=['סלון','מטבח','חדר שינה','מרפסת'];
+
+function render(t){
+  /* background glow drift */
+  $('glow').style.transform=`translate(${Math.sin(t/6)*60}px,${Math.cos(t/7)*80+ (t>12?220:0)*eio(P(t,12,14))}px)`;
+
+  /* S1 problem 0–5.4 */
+  text($('p1'),t,.25,5.2);text($('p2'),t,.95,5.2);text($('p3'),t,1.65,5.2);
+  [['k1',2.7],['k2',2.95],['k3',3.2]].forEach(([id,a])=>{const el=$(id),w=el.parentElement.querySelector?null:null;
+    const prog=eio(P(t,a,a+.35));el.style.width='300px';el.style.transform=`translateX(50%) scaleX(${prog})`;});
+  ['p1','p2','p3'].forEach((id,i)=>{if(t>2.7+i*.25)$(id).style.color=`rgba(246,241,234,${1-.6*P(t,2.7+i*.25,3.2+i*.25)})`;});
+  text($('p4'),t,3.7,5.4,24);
+
+  /* S2 5.6–9 */
+  text($('q1'),t,5.7,9);text($('q2'),t,6.25,9,36);
+
+  /* S3 logo 9.1–12.4  &  S9 end card 41.2–45 */
+  const L=$('logo'),mk=$('mark'),wd=$('word'),tg=$('tag');
+  if(t<30){
+    const a=P(t,9.1,9.9),o=P(t,12,12.5);
+    L.style.opacity=1-o;L.style.top='340px';
+    mk.style.transform=`scale(${.2+.8*back(a)}) rotate(${(1-eo(a))*-25}deg)`;mk.style.opacity=eo(a);
+    const w=eo(P(t,9.6,10.3));wd.style.opacity=w;wd.style.transform=`translateX(${(1-w)*-30}px)`;
+    const g=eo(P(t,10.4,11));tg.style.opacity=g;tg.style.transform=`translateY(${(1-g)*16}px)`;
+  }else{
+    const a=P(t,41.2,42);L.style.opacity=eo(a);L.style.top='300px';
+    mk.style.transform=`scale(${.2+.8*back(a)}) rotate(${(1-eo(a))*-25}deg)`;mk.style.opacity=eo(a);
+    const w=eo(P(t,41.6,42.3));wd.style.opacity=w;wd.style.transform=`translateX(${(1-w)*-30}px)`;
+    const g=eo(P(t,42.3,42.9));tg.style.opacity=g;tg.style.transform=`translateY(${(1-g)*16}px)`;
+  }
+  const c=eo(P(t,42.9,43.5));$('cta').style.opacity=c;$('cta').style.transform=`translateX(-50%) translateY(${(1-c)*20}px) scale(${.96+.04*c})`;
+  $('url').style.opacity=eo(P(t,43.4,44));
+
+  /* phone 12.4–36.6 */
+  const ph=$('phone'),pin=eo(P(t,12.4,13.3)),pout=eio(P(t,36.2,36.9));
+  ph.style.opacity=Math.min(pin,1-pout);
+  ph.style.transform=`translateY(${(1-pin)*260+pout*120}px) scale(${.94+.06*pin-.06*pout}) rotate(${(1-pin)*4}deg)`;
+
+  /* S4 feed scroll 12.4–20.2 */
+  let y=0;
+  y-=610*eio(P(t,15.2,15.75));y-=610*eio(P(t,17.4,17.95));y+=1220*eio(P(t,19.6,20.15));
+  strip.style.transform=`translateY(${y}px)`;
+  text($('c1'),t,13,20.2);
+
+  /* S5 room chapters 20.2–27 */
+  text($('c2'),t,20.4,27);
+  let ri=0;ROOMS_T.forEach((rt,i)=>{if(t>=rt)ri=i;});
+  rooms0.forEach((r,i)=>{                                  /* crossfade + slow push-in */
+    const on=i===ri?1:0,fadeIn=i===0?1:eo(P(t,ROOMS_T[i],ROOMS_T[i]+.35));
+    r.style.opacity=i===0?1:(t>=ROOMS_T[i]?fadeIn:0);
+    if(i>ri)r.style.opacity=0;
+    r.style.transform=`scale(${1.04+.05*P(t,i?ROOMS_T[i]:12.4,(i<3?ROOMS_T[i+1]:27)+.3)})`;
+  });
+  const inRooms=t>=20.4&&t<27;
+  chips0.forEach((cp,i)=>cp.classList.toggle('on',inRooms?i===ri:i===0&&t<20.4));
+  bars0.forEach((b,i)=>{const s=i?ROOMS_T[i]:ROOMS_T[0]-.4,e=i<3?ROOMS_T[i+1]:27;b.style.width=(t<20.2?0:clamp((t-s)/(e-s))*100)+'%';});
+  if(inRooms){const ft=ROOMS_T[ri];flash0.textContent=ROOM_NAMES[ri];flash0.style.opacity=Math.min(eo(P(t,ft,ft+.25)),1-P(t,ft+1,ft+1.3));}else flash0.style.opacity=0;
+
+  /* S6 filter sheet 27–32 */
+  text($('c3'),t,27.2,32);
+  const sh=eo(P(t,27.4,28))*(1-eio(P(t,31.5,32)));$('sheet').style.transform=`translateY(${(1-sh)*100}%)`;
+  const regs=[...$('regs').children],rms=[...$('rms').children];
+  regs.forEach((c,i)=>c.classList.toggle('on',(i===0&&t>28.5&&t<29.2)||(i===3&&t>29.2)));
+  rms.forEach((c,i)=>c.classList.toggle('on',i===2&&t>29.8));
+  const rv=eio(P(t,30.2,31));$('rngFill').style.left=(70-40*rv)+'%';$('rngKnob').style.left=(70-40*rv)+'%';
+  $('rngVal').textContent='₪'+Math.round(6000+3000*rv).toLocaleString('en-US');
+
+  /* S7 whatsapp 32–36.4 */
+  text($('c4'),t,32.2,36.4);
+  const rip=$('rip');                                      /* taps: filter button, then the visit button */
+  const tap=(tx,ty,a)=>{const k=P(t,a,a+.45);return k>0&&k<1?{x:tx,y:ty,k}:null;};
+  const T=tap(140,555,31.1)||tap(28,474,32.5);
+  if(T){rip.style.opacity=.6*(1-T.k);rip.style.left=(T.x-10)+'px';rip.style.top=(T.y-10)+'px';rip.style.transform=`scale(${1+3*T.k})`;}else rip.style.opacity=0;
+  const ch=eo(P(t,32.9,33.3));$('chat').style.opacity=ch;
+  const pop=(el,a)=>{const k=P(t,a,a+.3);el.style.opacity=eo(k);el.style.transform=`translateY(${(1-eo(k))*10}px) scale(${.92+.08*back(k)})`;};
+  pop($('b1'),33.3);
+  const ty=$('typing');ty.style.opacity=t>34&&t<34.9?1:0;[...ty.children].forEach((d,i)=>d.style.opacity=.35+.65*Math.abs(Math.sin(t*6+i)));
+  pop($('b2'),34.9);pop($('b3'),35.6);
+
+  /* S8 agents 36.6–41 */
+  text($('c5'),t,36.7,41,28);
+  const st=$('stats'),si=eo(P(t,36.9,37.6)),so=P(t,40.6,41);
+  st.style.opacity=Math.min(si,1-so);st.style.transform=`translateY(${(1-si)*40}px) scale(${.96+.04*si})`;
+  [[8.4,92],[6.1,67],[4.7,52],[3.2,35]].forEach(([v,w],i)=>{const k=eio(P(t,37.6+i*.18,38.8+i*.18));$('s'+(i+1)).style.width=w*k+'%';$('v'+(i+1)).textContent=(v*k).toFixed(1)+'s';});
+  const ins=eo(P(t,39.1,39.6));$('ins').style.opacity=ins;$('ins').style.transform=`translateY(${(1-ins)*10}px)`;
+
+  /* final fade */
+  $('fade').style.opacity=P(t,44.6,45);
+}
+window.render=render;
+render(0);
+</script>
+</body>
+</html>
