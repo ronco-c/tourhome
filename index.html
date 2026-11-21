@@ -21,7 +21,7 @@
     --brand:#ff6b3d; --brand-soft:rgba(255,107,61,.16); --brand-ink:#fff;
     --gold:#ffc65c; --ok:#2fd27a; --danger:#ff5a6a;
     --r-sm:10px; --r:14px; --r-lg:22px;
-    --nav-h:56px; --nav-pb:max(10px, calc(env(safe-area-inset-bottom, 0px) - 10px)); --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+    --nav-h:56px; --nav-pb:clamp(8px, calc(env(safe-area-inset-bottom, 0px) - 10px), 24px); --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
     --ease:cubic-bezier(.2,.8,.2,1);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -74,7 +74,10 @@
   .loc svg{width:14px;height:14px}
   .desc{font-size:14px;color:var(--muted);margin-top:6px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
-  .chapters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:12px -16px 0;padding:0 16px}
+  .chapters{position:absolute;left:0;right:0;bottom:18px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:0 16px;scroll-padding:0 16px;
+    -webkit-mask-image:linear-gradient(to left,transparent 0,#000 16px,#000 calc(100% - 28px),transparent 100%);mask-image:linear-gradient(to left,transparent 0,#000 16px,#000 calc(100% - 28px),transparent 100%)}
+  .card.has-ch .info{bottom:64px}
+  .card.has-ch .actions{bottom:64px}
   .chapters::-webkit-scrollbar{display:none}
   .chap{flex:none;display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;font-size:13px;font-weight:600;
     background:rgba(255,255,255,.12);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid transparent;transition:all .2s var(--ease)}
@@ -692,7 +695,7 @@ function renderFeed(){
 
 function buildCard(l){
   const c=document.createElement('article');c.className='card';c.dataset.id=l.id;
-  const ch=(l.chapters||[]).slice().sort((a,b)=>a.t-b.t);
+  const ch=(l.chapters||[]).slice().sort((a,b)=>a.t-b.t);if(ch.length)c.classList.add('has-ch');
   const dur=l.duration||0;
   const segs=ch.length&&dur?ch.map((x,i)=>{const end=i<ch.length-1?ch[i+1].t:dur;return Math.max(.02,(end-(i?x.t:0))/dur);}):[1];
   c.innerHTML=`
@@ -708,7 +711,6 @@ function buildCard(l){
       <div class="specs num"><span>${esc(l.rooms)} חדרים</span>${l.sqm?`<i></i><span>${esc(l.sqm)} מ"ר</span>`:''}${l.floor!==''&&l.floor!=null?`<i></i><span>קומה ${esc(l.floor)}</span>`:''}</div>
       <div class="loc">${I.pin}${loc(l)}</div>
       ${l.desc?`<div class="desc">${esc(l.desc)}</div>`:''}
-      ${ch.length?`<div class="chapters">${ch.map((x,i)=>`<button class="chap" data-i="${i}">${esc(x.room)}<span class="t num">${mmss(x.t)}</span></button>`).join('')}</div>`:''}
     </div>
     <div class="actions">
       <button class="act like ${liked.has(l.id)?'on':''}"><span class="ic">${I.heart}</span><span class="n num">${fmt(l.likes||0)}</span></button>
@@ -717,6 +719,7 @@ function buildCard(l){
       <button class="act share"><span class="ic">${I.share}</span>שיתוף</button>
       <button class="act mute"><span class="ic">${muted?I.mute:I.vol}</span>${muted?'קול':'השתק'}</button>
     </div>
+    ${ch.length?`<div class="chapters">${ch.map((x,i)=>`<button class="chap" data-i="${i}">${esc(x.room)}<span class="t num">${mmss(x.t)}</span></button>`).join('')}</div>`:''}
     <div class="seg-bar">${segs.map(w=>`<span style="flex:${w}"><i></i></span>`).join('')}</div>`;
   wireCard(c,l,ch);
   return c;
