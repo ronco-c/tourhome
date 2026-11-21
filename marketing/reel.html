@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>TourHome Reel Ad</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  /* ~21s vertical ad: scroll the feed, tap the reel, dive into the apartment. Driven by render(t). */
+  :root{--bg:#0d0c0b;--ink:#f6f1ea;--muted:rgba(246,241,234,.62);--brand:#ff6b3d}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:540px;height:960px;overflow:hidden;background:var(--bg);font-family:Heebo,Arial,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+  #stage{position:relative;width:540px;height:960px;overflow:hidden;background:var(--bg)}
+  .glow{position:absolute;width:900px;height:900px;border-radius:50%;left:-180px;top:80px;background:radial-gradient(circle,rgba(255,107,61,.2) 0%,rgba(255,107,61,.06) 35%,transparent 65%)}
+  .t{position:absolute;left:0;right:0;text-align:center;opacity:0;text-shadow:0 2px 24px rgba(0,0,0,.45)}
+  .big{font-size:56px;font-weight:900;letter-spacing:-1.5px;line-height:1.05}
+  .mid{font-size:40px;font-weight:800;letter-spacing:-.8px;line-height:1.15}
+  .o{color:var(--brand)}
+  /* phone */
+  #phone{position:absolute;left:120px;top:250px;width:300px;height:630px;border-radius:48px;background:#1a1816;padding:10px;transform-origin:270px 575px;
+    box-shadow:0 0 0 1.5px #34302c,0 40px 90px rgba(0,0,0,.7),0 0 120px rgba(255,107,61,.12);opacity:0}
+  #screen{position:relative;width:280px;height:610px;border-radius:38px;overflow:hidden;background:#000}
+  #island{position:absolute;top:10px;left:50%;width:84px;height:24px;margin-left:-42px;border-radius:14px;background:#000;z-index:20}
+  #strip{position:absolute;left:0;top:0;width:280px;will-change:transform}
+  .card{position:relative;width:280px;height:610px;overflow:hidden}
+  .card img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .shade{position:absolute;inset:0;background:linear-gradient(to top,rgba(8,7,6,.92) 0%,rgba(8,7,6,.5) 32%,rgba(8,7,6,0) 58%),linear-gradient(to bottom,rgba(8,7,6,.62),rgba(8,7,6,0) 22%)}
+  .ui-top{position:absolute;top:44px;left:12px;right:12px;display:flex;justify-content:space-between;font-size:11px;font-weight:700}
+  .ui-top .wm{font-weight:800;direction:ltr;font-size:13px}.ui-top .wm i,.wm i{font-style:normal;color:var(--brand)}
+  .ui-tabs{display:flex;gap:12px;color:var(--muted)}.ui-tabs b{color:var(--ink)}
+  .acts{position:absolute;left:10px;bottom:118px;display:flex;flex-direction:column;gap:12px}
+  .ac{width:36px;height:36px;border-radius:50%;background:rgba(20,18,16,.45);display:grid;place-items:center}
+  .ac svg{width:18px;height:18px}.ac.or{background:var(--brand)}
+  .info{position:absolute;right:14px;left:60px;bottom:96px}
+  .badges{display:flex;gap:5px;margin-bottom:6px}
+  .bd{font-size:9.5px;font-weight:700;padding:3px 7px;border-radius:5px;background:var(--brand)}
+  .bd.g{background:rgba(47,210,122,.2);color:#8ff0b8}.bd.w{background:var(--ink);color:#111}
+  .price{font-size:27px;font-weight:900;letter-spacing:-.6px;line-height:1}
+  .price small{font-size:11px;font-weight:500;color:var(--muted);margin-inline-start:3px}
+  .specs{font-size:12px;font-weight:600;margin-top:5px}.loc{font-size:11px;color:var(--muted);margin-top:4px}
+  .chaps{position:absolute;right:12px;left:12px;bottom:40px;display:flex;gap:5px}
+  .chap{flex:none;padding:6px 9px;border-radius:999px;font-size:10.5px;font-weight:700;background:rgba(255,255,255,.14)}
+  .chap.on{background:var(--ink);color:#111}
+  .segs{position:absolute;left:10px;right:10px;bottom:28px;height:3px;display:flex;gap:3px}
+  .segs span{flex:1;border-radius:2px;background:rgba(255,255,255,.25);overflow:hidden;position:relative}
+  .segs i{position:absolute;inset:0;width:0;background:var(--ink)}
+  .nav{position:absolute;left:0;right:0;bottom:0;height:24px;background:#0d0c0b}
+  .ripple{position:absolute;width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.6);opacity:0;z-index:15}
+  .toast{position:absolute;top:84px;left:50%;transform:translateX(-50%);padding:8px 14px;border-radius:999px;background:var(--ink);color:#111;font-size:12px;font-weight:800;white-space:nowrap;opacity:0;z-index:16}
+  /* full-bleed tour */
+  #full{position:absolute;inset:0;opacity:0;overflow:hidden;background:#000}
+  #full img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  #full .shade{background:linear-gradient(to top,rgba(8,7,6,.85) 0%,rgba(8,7,6,.35) 26%,rgba(8,7,6,0) 46%),linear-gradient(to bottom,rgba(8,7,6,.55),rgba(8,7,6,0) 20%)}
+  #fTop{position:absolute;top:34px;left:24px;right:24px;display:flex;justify-content:space-between;align-items:center}
+  #fTop .wm{font-size:24px;font-weight:800;letter-spacing:-.5px;direction:ltr}
+  #room{position:absolute;top:96px;left:50%;padding:10px 22px;border-radius:999px;background:rgba(0,0,0,.45);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    font-size:24px;font-weight:800;white-space:nowrap;transform:translateX(-50%)}
+  #fInfo{position:absolute;right:28px;left:28px;bottom:120px}
+  #fInfo .price{font-size:52px}#fInfo .price small{font-size:20px}
+  #fInfo .specs{font-size:22px;margin-top:10px}#fInfo .loc{font-size:19px;margin-top:6px}
+  #fInfo .badges{gap:8px;margin-bottom:12px}#fInfo .bd{font-size:16px;padding:5px 12px;border-radius:8px}
+  #fChaps{position:absolute;right:24px;left:24px;bottom:56px;display:flex;gap:8px}
+  #fChaps .chap{font-size:17px;padding:9px 16px}
+  #fSegs{position:absolute;left:24px;right:24px;bottom:34px;height:4px;display:flex;gap:5px}
+  #fSegs span{border-radius:2px;background:rgba(255,255,255,.28);overflow:hidden;position:relative}
+  #fSegs i{position:absolute;inset:0;width:0;background:var(--ink)}
+  #fLine{position:absolute;left:0;right:0;top:380px;text-align:center;opacity:0;text-shadow:0 2px 30px rgba(0,0,0,.6)}
+  /* end */
+  #endbg{position:absolute;inset:0;opacity:0}
+  #endbg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(6px)}
+  #endbg::after{content:"";position:absolute;inset:0;background:rgba(13,12,11,.74)}
+  #logo{position:absolute;left:0;right:0;top:300px;display:flex;flex-direction:column;align-items:center;gap:22px;opacity:0}
+  #logoRow{display:flex;align-items:center;gap:16px;direction:ltr}
+  #mark{width:92px;height:92px}
+  #word{font-size:72px;font-weight:900;letter-spacing:-3px;line-height:1}#word i{font-style:normal;color:var(--brand)}
+  #tag{font-size:30px;font-weight:700;color:var(--muted)}
+  #cta{position:absolute;left:50%;top:620px;transform:translateX(-50%);height:58px;padding:0 34px;border-radius:16px;background:var(--brand);display:grid;place-items:center;font-weight:800;font-size:22px;opacity:0;box-shadow:0 14px 40px rgba(255,107,61,.35);white-space:nowrap}
+  #url{position:absolute;left:0;right:0;top:710px;text-align:center;font-size:17px;color:var(--muted);direction:ltr;opacity:0}
+  #flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:40}
+  #fade{position:absolute;inset:0;background:#000;opacity:0;z-index:50}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="glow" id="glow"></div>
+  <div class="t big" id="h1" style="top:390px">גללת מספיק<br><span class="o">דירות?</span></div>
+  <div class="t mid" id="c1" style="top:120px">גוללים…</div>
+  <div class="t mid" id="c2" style="top:120px">…ופתאום<br><span class="o">דירה שעוצרת אותך.</span></div>
+
+  <div id="phone"><div id="screen">
+    <div id="island"></div>
+    <div id="strip"></div>
+    <div class="ripple" id="rip"></div>
+    <div class="toast" id="toast">הביקור נקבע · מחר 18:00</div>
+    <div class="nav"></div>
+  </div></div>
+
+  <div id="full">
+    <img id="fimg" alt="">
+    <div class="shade"></div>
+    <div id="fTop"><span class="wm">tourhome<i>.</i></span></div>
+    <div id="room">סלון</div>
+    <div id="fInfo"><div class="badges"><span class="bd">להשכרה</span><span class="bd g">ללא תיווך</span></div>
+      <div class="price">₪7,200<small>לחודש</small></div><div class="specs">3 חדרים · 80 מ״ר · קומה 5</div><div class="loc">תל אביב · ליד הים</div></div>
+    <div id="fChaps"><span class="chap">סלון</span><span class="chap">מטבח</span><span class="chap">חדר שינה</span><span class="chap">מרפסת</span></div>
+    <div id="fSegs"></div>
+    <div class="t big" id="fLine" style="top:360px">כל דירה.<br><span class="o">בסיור אחד.</span></div>
+  </div>
+
+  <div id="endbg"><img src="assets/balcony.jpg" alt=""></div>
+  <div id="logo">
+    <div id="logoRow"><svg id="mark" viewBox="0 0 64 64"><path d="M8 29L32 9l24 20v24a3 3 0 01-3 3H11a3 3 0 01-3-3z" fill="#ff6b3d"/><path d="M27 26v18l15-9z" fill="#fff"/></svg><div id="word">tourhome<i>.</i></div></div>
+    <div id="tag">כל דירה. בסיור אחד.</div>
+  </div>
+  <div id="cta">נסו עכשיו</div>
+  <div id="url">ronco-c.github.io/tourhome</div>
+  <div id="flash"></div>
+  <div id="fade"></div>
+</div>
+<script>
+const VFPS=30,VFRAMES=300,VLEN=10;                     /* tour video frames: .reel-frames/v0001.jpg … */
+const vsrc=vt=>`.reel-frames/v${String(Math.max(1,Math.min(VFRAMES,Math.floor(vt*VFPS)+1))).padStart(4,'0')}.jpg`;
+const ROOMS=[[0,'סלון'],[2.6,'מטבח'],[4.3,'חדר שינה'],[6.3,'מרפסת']];
+const IC={heart:'<svg viewBox="0 0 24 24" fill="#fff"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.5 3 4.5 6.8 4.5c2.2 0 3.6 1.2 5.2 3 1.6-1.8 3-3 5.2-3 3.8 0 5.9 4 4.4 7.3C19.5 16.4 12 21 12 21z"/></svg>',
+  cmt:'<svg viewBox="0 0 24 24" fill="#fff"><path d="M12 3C6.5 3 2 6.9 2 11.7c0 2.6 1.3 4.9 3.4 6.5L4.6 21.5c-.1.4.3.7.7.5l3.9-2c.9.2 1.8.3 2.8.3 5.5 0 10-3.9 10-8.7S17.5 3 12 3z"/></svg>',
+  save:'<svg viewBox="0 0 24 24" fill="#fff"><path d="M6 3h12a1 1 0 011 1v17l-7-4.5L5 21V4a1 1 0 011-1z"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>'};
+function card(id,img,price,unit,deal,specs,loc,chaps){
+  return `<div class="card" id="${id}"><img class="bg" src="${img}" alt=""><div class="shade"></div>
+    <div class="ui-top"><span class="ui-tabs"><b>הכל</b><span>להשכרה</span><span>למכירה</span></span><span class="wm">tourhome<i>.</i></span></div>
+    <div class="acts"><span class="ac">${IC.heart}</span><span class="ac">${IC.cmt}</span><span class="ac">${IC.save}</span><span class="ac or">${IC.cal}</span></div>
+    <div class="info"><div class="badges"><span class="bd ${deal==='sale'?'w':''}">${deal==='sale'?'למכירה':'להשכרה'}</span><span class="bd g">ללא תיווך</span></div>
+      <div class="price">${price}${unit?`<small>${unit}</small>`:''}</div><div class="specs">${specs}</div><div class="loc">${loc}</div></div>
+    ${chaps?`<div class="chaps">${chaps.map(c=>`<span class="chap">${c}</span>`).join('')}</div>`:''}
+    <div class="segs">${(chaps||[1]).map(()=>'<span><i></i></span>').join('')}</div></div>`;
+}
+const strip=document.getElementById('strip');
+strip.innerHTML=
+  card('cA','assets/building.jpg','₪8,900','לחודש','rent','3.5 חדרים · 95 מ״ר','תל אביב · לב העיר')+
+  card('cB','assets/penthouse.jpg','₪3,150,000','','sale','4 חדרים · 105 מ״ר · קומה 12','רמת גן · הבורסה')+
+  card('cC','assets/kitchen.jpg','₪6,400','לחודש','rent','3 חדרים · 72 מ״ר','גבעתיים · בורוכוב')+
+  card('cD','assets/bedroom.jpg','₪5,100','לחודש','rent','2 חדרים · 55 מ״ר','תל אביב · פלורנטין')+
+  card('cV',vsrc(0),'₪7,200','לחודש','rent','3 חדרים · 80 מ״ר · קומה 5','תל אביב · ליד הים',ROOMS.map(r=>r[1]));
+document.getElementById('fSegs').innerHTML=ROOMS.map((r,i)=>`<span style="flex:${(i<3?ROOMS[i+1][0]:VLEN)-r[0]}"><i></i></span>`).join('');
+
+const $=id=>document.getElementById(id);
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),P=(t,a,b)=>clamp((t-a)/(b-a));
+const eo=x=>1-Math.pow(1-x,3),eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2,ei=x=>x*x*x;
+const back=x=>{const c1=1.5,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2);};
+function text(el,t,a,b,dy=28,fi=.45,fo=.35){const i=eo(P(t,a,a+fi)),o=P(t,b-fo,b);el.style.opacity=Math.min(i,1-o);el.style.transform=`translateY(${(1-i)*dy-o*14}px)`;}
+const roomIdx=vt=>{let r=0;ROOMS.forEach((x,i)=>{if(vt>=x[0]-.05)r=i;});return r;};
+function progress(spans,vt){spans.forEach((s,i)=>{const a=ROOMS[i][0],b=i<3?ROOMS[i+1][0]:VLEN;s.querySelector('i').style.width=clamp((vt-a)/(b-a))*100+'%';});}
+
+/* key times */
+const V0=4.0;            /* tour video starts playing inside the phone */
+const TAP=5.0, ZIN=[5.25,6.15], FULL_END=V0+VLEN, ZOUT=[14.1,15.0], END=17.2, DUR=21;
+
+const vimgs=[];          /* images that show the current tour frame */
+function render(t){
+  $('glow').style.transform=`translate(${Math.sin(t/5)*50}px,${Math.cos(t/6)*60}px)`;
+  text($('h1'),t,.1,1.25,30,.35,.3);
+  text($('c1'),t,1.3,3.9);text($('c2'),t,4.0,5.3);
+
+  /* phone in */
+  const ph=$('phone'),pin=eo(P(t,1.0,1.55));
+  /* feed scroll: 4 accelerating flicks then a soft landing on the reel */
+  const flicks=[[1.75,2.2],[2.4,2.78],[2.95,3.28],[3.42,3.72]];
+  let y=0,vel=0;flicks.forEach(([a,b])=>{const k=P(t,a,b);y-=610*eio(k);if(k>0&&k<1)vel=Math.max(vel,Math.sin(Math.PI*k));});
+  y+=Math.sin(P(t,3.72,4.05)*Math.PI)*-8;                /* small overshoot */
+  strip.style.transform=`translateY(${y}px)`;strip.style.filter=vel>.05?`blur(${vel*4}px)`:'none';
+
+  /* tour frame */
+  const vt=clamp(t-V0,0,VLEN-.001),src=vsrc(vt);
+  const cv=$('cV');cv.querySelector('img.bg').src=src;
+  const ri=roomIdx(vt);cv.querySelectorAll('.chap').forEach((c,i)=>c.classList.toggle('on',t>=V0&&i===ri));
+  if(t>=V0)progress([...cv.querySelectorAll('.segs span')],vt);
+
+  /* tap ripple + zoom into the phone */
+  const rip=$('rip');const tk=P(t,TAP,TAP+.45),tk2=P(t,15.35,15.8);
+  if(tk>0&&tk<1){rip.style.opacity=.7*(1-tk);rip.style.left='128px';rip.style.top='290px';rip.style.transform=`scale(${1+5*tk})`;}
+  else if(tk2>0&&tk2<1){rip.style.opacity=.7*(1-tk2);rip.style.left='16px';rip.style.top='462px';rip.style.transform=`scale(${1+3*tk2})`;}
+  else rip.style.opacity=0;
+  const zi=ei(P(t,ZIN[0],ZIN[1])),zo=eio(P(t,ZOUT[0],ZOUT[1]));
+  const z=Math.max(0,zi-zo);                               /* 0 = phone, 1 = screen fills the stage */
+  const S=1+(2.05-1)*z;                                    /* scale so the 280px screen covers 540px */
+  /* screen centre is at (270,565) in stage px; move it to (270,480) as we zoom */
+  ph.style.transformOrigin='150px 315px';
+  const pout=eio(P(t,16.6,17.2));
+  ph.style.opacity=Math.min(pin,1-pout);
+  ph.style.transform=`translateY(${(1-pin)*260 - 85*z + pout*80}px) scale(${S*(.94+.06*pin)*(1-.06*pout)})`;
+  ph.style.boxShadow=z>0?'none':'';
+
+  /* full-bleed takeover */
+  const full=$('full'),fo=Math.min(eo(P(t,ZIN[1]-.25,ZIN[1]+.05)),1-P(t,ZOUT[0],ZOUT[0]+.25));
+  full.style.opacity=fo;
+  if(fo>0){
+    $('fimg').src=src;$('fimg').style.transform=`scale(${1.02+.03*P(t,ZIN[1],FULL_END)})`;
+    const r=$('room');r.textContent=ROOMS[ri][1];
+    const since=vt-ROOMS[ri][0];r.style.opacity=ri===0?eo(P(t,ZIN[1],ZIN[1]+.3)):eo(clamp(since/.3));
+    r.style.transform=`translateX(-50%) scale(${ri===0?1:.9+.1*back(clamp(since/.35))})`;
+    $$('#fChaps .chap').forEach((c,i)=>c.classList.toggle('on',i===ri));
+    progress([...$('fSegs').children],vt);
+    const ln=Math.min(eo(P(t,V0+7.6,V0+8.2)),1-P(t,FULL_END-.15,FULL_END+.1));
+    const fl=$('fLine');fl.style.opacity=ln;fl.style.transform=`translateY(${(1-ln)*20}px)`;
+    $('fInfo').style.opacity=1-ln*.85;$('room').style.opacity*=1-ln;
+  }
+  /* toast after tapping "visit" */
+  const ts=Math.min(eo(P(t,15.7,16)),1-P(t,16.9,17.2));$('toast').style.opacity=ts;$('toast').style.transform=`translateX(-50%) translateY(${(1-ts)*-8}px)`;
+  $('flash').style.opacity=.18*Math.sin(Math.PI*P(t,ZIN[1]-.12,ZIN[1]+.12));
+
+  /* end card */
+  $('endbg').style.opacity=eo(P(t,END-.4,END+.4));$('endbg').querySelector('img').style.transform=`scale(${1.1-.06*P(t,END,DUR)})`;
+  const a=P(t,END,END+.8),L=$('logo');L.style.opacity=eo(a);
+  $('mark').style.transform=`scale(${.2+.8*back(a)}) rotate(${(1-eo(a))*-25}deg)`;
+  const w=eo(P(t,END+.4,END+1.1));$('word').style.opacity=w;$('word').style.transform=`translateX(${(1-w)*-30}px)`;
+  const g=eo(P(t,END+1.1,END+1.7));$('tag').style.opacity=g;$('tag').style.transform=`translateY(${(1-g)*16}px)`;
+  const c=eo(P(t,END+1.7,END+2.3));$('cta').style.opacity=c;$('cta').style.transform=`translateX(-50%) translateY(${(1-c)*20}px)`;
+  $('url').style.opacity=eo(P(t,END+2.2,END+2.8));
+  $('fade').style.opacity=P(t,DUR-.4,DUR);
+}
+const $$=s=>[...document.querySelectorAll(s)];
+window.render=render;window.DURATION=21;
+/* resolves once every <img> showing a tour frame has decoded */
+window.ready=()=>Promise.all($$('img').map(i=>i.complete&&i.naturalWidth?null:i.decode().catch(()=>{})));
+render(0);
+</script>
+</body>
+</html>
