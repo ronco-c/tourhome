@@ -326,6 +326,28 @@
   .ac button small{color:var(--faint);font-size:12px;flex:none}
   .ac button.rg{color:#ffb397;font-weight:700}
 
+  /* ================= COMMENTS ================= */
+  #cmtSheet{display:flex;flex-direction:column;height:72%;max-height:72%;overflow:hidden;padding-bottom:0}
+  #cmtSheet h2{font-size:17px;text-align:center;margin:0 0 12px}
+  .cmt-list{flex:1;overflow-y:auto;margin:0 -18px;padding:4px 18px 12px}
+  .cmt{display:flex;gap:10px;padding:10px 0}
+  .cmt .av{flex:none;width:34px;height:34px;border-radius:11px;background:var(--surface-2);display:grid;place-items:center;font-weight:800;font-size:14px}
+  .cmt .av.own{background:var(--brand);color:#fff}
+  .cmt .cb{flex:1;min-width:0}
+  .cmt .ch{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+  .cmt .ch b{color:var(--ink);font-weight:700}
+  .cmt .tag{font-size:11px;font-weight:700;padding:1px 7px;border-radius:5px;background:var(--brand-soft);color:#ffb397}
+  .cmt .ct{font-size:15px;line-height:1.5;margin-top:2px;white-space:pre-wrap;overflow-wrap:anywhere}
+  .cmt .del{font-size:12px;color:var(--faint);margin-top:4px}
+  .cmt-empty{text-align:center;color:var(--muted);padding:40px 10px;font-size:15px;line-height:1.5}
+  .cmt-bar{margin:0 -18px;padding:10px 14px calc(10px + var(--nav-pb));border-top:1px solid var(--line);background:var(--surface);display:grid;gap:8px}
+  .cmt-bar input{width:100%;height:44px;padding:0 14px;border-radius:22px;border:1px solid var(--line-2);background:var(--surface-2);outline:none;font-size:16px}
+  .cmt-bar input:focus{border-color:var(--brand)}
+  .cmt-row{display:flex;gap:8px;align-items:center}
+  .cmt-send{flex:none;width:44px;height:44px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center}
+  .cmt-send:disabled{opacity:.35}
+  .cmt-send svg{width:20px;height:20px}
+
   /* ================= ONBOARDING ================= */
   .onb{position:absolute;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column;padding:calc(30px + var(--safe-t)) 26px calc(26px + var(--safe-b))}
   .onb .brand{display:flex;align-items:center;gap:12px;direction:ltr;justify-content:flex-end}
@@ -501,6 +523,14 @@
   <button class="btn ghost block" id="fSave" style="margin-top:10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0"/></svg>שמירת החיפוש + התראה על דירות חדשות</button>
 </div>
 <div class="sheet" id="genSheet"><div class="grab"></div><button class="sheet-x" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div id="genBody"></div></div>
+<div class="sheet" id="cmtSheet"><div class="grab"></div><button class="sheet-x" aria-label="סגירה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <h2 id="cmtTitle">תגובות</h2>
+  <div id="cmtList" class="cmt-list"></div>
+  <form class="cmt-bar" id="cmtForm" autocomplete="off">
+    <input id="cmtName" class="cmt-name hidden" maxlength="30" placeholder="השם שלך">
+    <div class="cmt-row"><input id="cmtText" maxlength="300" placeholder="הוסיפו תגובה או שאלה על הדירה"><button class="cmt-send" type="submit" aria-label="שליחה" disabled><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 20.5V14l-9-2 9-2V3.5L2 12z"/></svg></button></div>
+  </form>
+</div>
 <div class="toast" id="toast"></div>
 
 <!-- ============ ONBOARDING ============ -->
@@ -715,6 +745,7 @@ function buildCard(l){
     </div>
     <div class="actions">
       <button class="act like ${liked.has(l.id)?'on':''}"><span class="ic">${I.heart}</span><span class="n num">${fmt(l.likes||0)}</span></button>
+      <button class="act cmtbtn"><span class="ic">${I.comment}</span><span class="n num">${fmt((l.comments||[]).length)}</span></button>
       <button class="act save ${saved.has(l.id)?'on':''}"><span class="ic">${I.save}</span>שמירה</button>
       <a class="act visit" href="${waVisit(l)}" target="_blank" rel="noopener"><span class="ic">${I.cal}</span>ביקור</a>
       <button class="act share"><span class="ic">${I.share}</span>שיתוף</button>
@@ -761,6 +792,7 @@ function wireCard(c,l,ch){
     $$('#feed .act.mute').forEach(b=>b.innerHTML=`<span class="ic">${muted?I.mute:I.vol}</span>${muted?'קול':'השתק'}`);
     $$('#feed video').forEach(x=>x.muted=muted);};
   c.querySelector('.like').onclick=()=>doLike(c,l,false);
+  c.querySelector('.cmtbtn').onclick=()=>openComments(l);
   c.querySelector('.save').onclick=e=>{const on=!saved.has(l.id);on?saved.add(l.id):saved.delete(l.id);LS.set('saved',[...saved]);bump(l,'saves',on?1:-1);
     e.currentTarget.classList.toggle('on',on);toast(on?'נשמר למועדפים':'הוסר מהמועדפים');};
   c.querySelector('.share').onclick=()=>share(l);
@@ -1017,7 +1049,7 @@ function openStats(l){
   const conv=views?Math.round((s.wa||0)/views*1000)/10:0;
   $('#genBody').innerHTML=`<div class="eyebrow">סטטיסטיקה</div><h2>${esc(l.rooms)} חד׳ · ${loc(l)}</h2>
     <div class="kv num"><div><b>${fmt(views)}</b><span>צפיות</span></div><div><b>${fmt(l.likes||0)}</b><span>לייקים</span></div><div><b>${fmt(s.saves||0)}</b><span>שמירות</span></div>
-      <div><b>${fmt(s.wa||0)}</b><span>פניות</span></div><div><b>${conv}%</b><span>המרה לפנייה</span></div><div><b>${views?Math.round(s.watch/views):0}s</b><span>צפייה ממוצעת</span></div></div>
+      <div><b>${fmt(s.wa||0)}</b><span>פניות</span></div><div><b>${fmt((l.comments||[]).length)}</b><span>תגובות</span></div><div><b>${conv}%</b><span>המרה לפנייה</span></div><div><b>${views?Math.round(s.watch/views):0}s</b><span>צפייה ממוצעת</span></div></div>
     <div class="sec">זמן צפייה לפי חדר (ממוצע לצופה)</div>
     ${isPro()?roomsHTML:`<div class="locked"><div class="lk-in"><div class="bars">${['סלון','מטבח','מרפסת','חדר שינה'].map((r,i)=>`<div class="bar"><span>${r}</span><span class="tr"><i style="width:${92-i*22}%"></i></span><span class="v">0.0s</span></div>`).join('')}</div></div>
       <div class="lk-cta">${I.lock}<span>זמין במסלול "מקצועי"</span><button class="btn" id="upg" style="height:40px;font-size:14px">שדרוג — 30 יום חינם</button></div></div>`}`;
@@ -1174,6 +1206,37 @@ function resetWizard(){
   $('#prev1').removeAttribute('src');$('#prev2').removeAttribute('src');$('#drop').classList.remove('hidden');$('#vp1').classList.add('hidden');
   wiz.step=1;
 }
+
+/* ================= COMMENTS ================= */
+I.comment='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.5 3 2 6.9 2 11.7c0 2.6 1.3 4.9 3.4 6.5L4.6 21.5c-.1.4.3.7.7.5l3.9-2c.9.2 1.8.3 2.8.3 5.5 0 10-3.9 10-8.7S17.5 3 12 3z"/></svg>';
+function ago(ts){const m=Math.floor((Date.now()-ts)/60000);if(m<1)return 'עכשיו';if(m<60)return `לפני ${m} דק׳`;const h=Math.floor(m/60);if(h<24)return `לפני ${h} שע׳`;
+  const d=Math.floor(h/24);return d<7?`לפני ${d} ימים`:new Date(ts).toLocaleDateString('he-IL');}
+let cmtFor=null;
+function renderComments(){
+  const l=cmtFor,list=l.comments||[];
+  $('#cmtTitle').textContent=list.length?`${fmt(list.length)} תגובות`:'תגובות';
+  $('#cmtList').innerHTML=list.length?list.map(c=>`<div class="cmt"><div class="av${c.owner?' own':''}">${esc((c.name||'?').trim()[0]||'?')}</div>
+      <div class="cb"><div class="ch"><b>${esc(c.name)}</b>${c.owner?'<span class="tag">מפרסם</span>':''}<span>· ${ago(c.ts)}</span></div>
+      <div class="ct">${esc(c.text)}</div>${c.mine?`<button class="del" data-id="${esc(c.id)}">מחיקה</button>`:''}</div></div>`).join('')
+    :'<div class="cmt-empty">עדיין אין תגובות.<br>שאלו משהו על הדירה.</div>';
+  $$('#cmtList .del').forEach(b=>b.onclick=async()=>{l.comments=l.comments.filter(c=>c.id!==b.dataset.id);await store.update(l);renderComments();syncCmtCount(l);});
+  const el=$('#cmtList');el.scrollTop=el.scrollHeight;
+}
+function syncCmtCount(l){$$('#feed .card').forEach(c=>{if(c.dataset.id===l.id){const n=c.querySelector('.cmtbtn .n');if(n)n.textContent=fmt((l.comments||[]).length);}});}
+function openComments(l){
+  cmtFor=l;l.comments=l.comments||[];
+  const me=getMe();$('#cmtName').classList.toggle('hidden',!!me.name);$('#cmtName').value='';$('#cmtText').value='';$('.cmt-send').disabled=true;
+  renderComments();openSheet('#cmtSheet');
+}
+$('#cmtText').addEventListener('input',e=>{$('.cmt-send').disabled=!e.target.value.trim();});
+$('#cmtForm').onsubmit=async e=>{
+  e.preventDefault();const l=cmtFor;if(!l)return;
+  const text=$('#cmtText').value.trim();if(!text)return;
+  let name=getMe().name;
+  if(!name){name=$('#cmtName').value.trim();if(!name){$('#cmtName').focus();toast('הוסיפו שם כדי להגיב');return;}setMe({name});$('#cmtName').classList.add('hidden');}
+  l.comments.push({id:Date.now()+'-'+Math.random().toString(36).slice(2,7),name,text,ts:Date.now(),mine:true,owner:mine.has(l.id)});
+  await store.update(l);$('#cmtText').value='';$('.cmt-send').disabled=true;renderComments();syncCmtCount(l);
+};
 
 /* ================= CITY / REGION AUTOCOMPLETE ================= */
 function attachAC(inp,opt={}){
