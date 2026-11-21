@@ -9,6 +9,7 @@ const path = require('path'), fs = require('fs'), { execFileSync } = require('ch
   const pg = await b.newPage({ viewport: { width: 540, height: 960 }, deviceScaleFactor: 2 });
   await pg.goto('file://' + path.join(__dirname, 'ad.html'));
   await pg.evaluate(() => document.fonts.ready);
+  await pg.evaluate(() => Promise.all([...document.images].map(i => i.decode().catch(() => {}))));
   await pg.waitForTimeout(500);
   if (prevArg > 0) {
     for (const t of process.argv[prevArg + 1].split(',').map(Number)) {

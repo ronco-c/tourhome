@@ -11,6 +11,11 @@
   html,body{width:540px;height:960px;overflow:hidden;background:var(--bg);font-family:Heebo,Arial,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
   #stage{position:relative;width:540px;height:960px;overflow:hidden;background:var(--bg)}
   .abs{position:absolute}
+  .bgph{position:absolute;inset:0;opacity:0;overflow:hidden}
+  .bgph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .bgph::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(13,12,11,.45),rgba(13,12,11,.3) 35%,rgba(13,12,11,.55) 60%,rgba(13,12,11,.9))}
+  #bgB::after{background:rgba(13,12,11,.74)}
+  #q1,#q2{text-shadow:0 2px 24px rgba(0,0,0,.55)}
   .glow{position:absolute;width:900px;height:900px;border-radius:50%;left:-180px;top:-120px;
     background:radial-gradient(circle,rgba(255,107,61,.20) 0%,rgba(255,107,61,.06) 35%,transparent 65%);pointer-events:none}
   .t{position:absolute;left:0;right:0;text-align:center;opacity:0;will-change:transform,opacity}
@@ -34,8 +39,8 @@
   #strip{position:absolute;left:0;top:0;width:280px}
   .card{position:relative;width:280px;height:610px;overflow:hidden}
   .room{position:absolute;inset:0}
-  .room svg{position:absolute;inset:0;width:100%;height:100%}
-  .shade{position:absolute;inset:0;background:linear-gradient(to top,rgba(8,7,6,.9) 0%,rgba(8,7,6,.45) 30%,rgba(8,7,6,0) 55%),linear-gradient(to bottom,rgba(8,7,6,.5),rgba(8,7,6,0) 18%)}
+  .room img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .shade{position:absolute;inset:0;background:linear-gradient(to top,rgba(8,7,6,.92) 0%,rgba(8,7,6,.5) 32%,rgba(8,7,6,0) 58%),linear-gradient(to bottom,rgba(8,7,6,.62),rgba(8,7,6,0) 22%)}
   .ui-top{position:absolute;top:44px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700}
   .ui-top .wm{font-weight:800;direction:ltr;font-size:13px}
   .ui-top .wm i{font-style:normal;color:var(--brand)}
@@ -113,6 +118,8 @@
 <body>
 <div id="stage">
   <div class="glow" id="glow"></div>
+  <div class="bgph" id="bgA"><img src="assets/balcony.jpg" alt=""></div>
+  <div class="bgph" id="bgB"><img src="assets/building.jpg" alt=""></div>
 
   <!-- S1: problem -->
   <div class="t big" id="p1" style="top:300px">20 תמונות.<span class="strike" id="k1"></span></div>
@@ -183,31 +190,9 @@
 </div>
 
 <script>
-/* ---------- room illustrations (280x610, warm line art) ---------- */
-const ROOM={
-  living:{g:['#e2c19c','#8a664c'],svg:`<g fill="none" stroke="rgba(255,250,240,.55)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
-    <rect x="150" y="120" width="96" height="130" rx="4"/><path d="M198 120v130M150 185h96"/>
-    <rect x="30" y="300" width="200" height="56" rx="16"/><rect x="22" y="330" width="30" height="62" rx="10"/><rect x="208" y="330" width="30" height="62" rx="10"/>
-    <rect x="44" y="350" width="172" height="42" rx="8"/><path d="M60 392v16M200 392v16"/>
-    <path d="M62 170h44l-8 34H70z"/><path d="M84 204v20"/><rect x="40" y="224" width="70" height="4" rx="2"/>
-    <path d="M250 300c-8-20 4-44 18-52M252 300c10-18 2-40-6-50"/><path d="M240 300h24l-4 26h-16z"/></g>`},
-  kitchen:{g:['#eadfcc','#8c7a64'],svg:`<g fill="none" stroke="rgba(255,250,240,.55)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
-    <rect x="18" y="140" width="244" height="70" rx="4"/><path d="M79 140v70M140 140v70M201 140v70M70 175h4M131 175h4M192 175h4M253 175h4"/>
-    <path d="M90 60v60M190 60v60"/><path d="M72 120a18 14 0 0136 0zM172 120a18 14 0 0136 0z"/>
-    <rect x="18" y="330" width="244" height="14" rx="3"/><rect x="18" y="344" width="244" height="70" rx="4"/><path d="M79 344v70M140 344v70M201 344v70"/>
-    <rect x="100" y="290" width="44" height="40" rx="4"/><path d="M200 330v-34c0-8 12-8 12 0"/></g>`},
-  bedroom:{g:['#d6b3ad','#5f4a51'],svg:`<g fill="none" stroke="rgba(255,250,240,.55)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
-    <rect x="90" y="130" width="100" height="70" rx="4"/><path d="M100 185l26-28 18 18 14-12 22 22"/>
-    <rect x="46" y="250" width="188" height="74" rx="18"/><rect x="34" y="316" width="212" height="86" rx="12"/><path d="M50 402v14M230 402v14"/>
-    <rect x="62" y="296" width="66" height="26" rx="10"/><rect x="152" y="296" width="66" height="26" rx="10"/><path d="M34 350h212"/>
-    <rect x="248" y="330" width="26" height="40" rx="4"/><path d="M261 330v-26M250 304h22l-4-18h-14z"/></g>`},
-  balcony:{g:['#f4c98a','#d9704a'],svg:`<g fill="none" stroke="rgba(255,250,240,.65)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
-    <circle cx="196" cy="160" r="34"/><path d="M20 250h240"/><path d="M40 238c30-14 50-10 70 0s46 12 70 0 40-8 60 0"/>
-    <path d="M14 320h252M14 410h252"/><path d="M34 320v90M64 320v90M94 320v90M124 320v90M154 320v90M184 320v90M214 320v90M244 320v90"/>
-    <path d="M56 410v-30h40v30M60 380c-6-30 10-52 16-58 6 8 18 26 14 58"/>
-    <path d="M190 410l6-44h44l6 44M196 366l-4-30h48l-4 30"/></g>`},
-};
-const roomHTML=k=>`<div class="room" data-room="${k}" style="background:linear-gradient(170deg,${ROOM[k].g[0]},${ROOM[k].g[1]})"><svg viewBox="0 0 280 610">${ROOM[k].svg}</svg></div>`;
+/* ---------- real apartment photos ---------- */
+const ROOM={living:'assets/living.jpg',kitchen:'assets/kitchen.jpg',bedroom:'assets/bedroom.jpg',balcony:'assets/balcony.jpg',penthouse:'assets/penthouse.jpg',building:'assets/building.jpg'};
+const roomHTML=k=>`<div class="room" data-room="${k}"><img src="${ROOM[k]}" alt=""></div>`;
 const IC={
   heart:'<svg viewBox="0 0 24 24" fill="#fff"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.5 3 4.5 6.8 4.5c2.2 0 3.6 1.2 5.2 3 1.6-1.8 3-3 5.2-3 3.8 0 5.9 4 4.4 7.3C19.5 16.4 12 21 12 21z"/></svg>',
   cmt:'<svg viewBox="0 0 24 24" fill="#fff"><path d="M12 3C6.5 3 2 6.9 2 11.7c0 2.6 1.3 4.9 3.4 6.5L4.6 21.5c-.1.4.3.7.7.5l3.9-2c.9.2 1.8.3 2.8.3 5.5 0 10-3.9 10-8.7S17.5 3 12 3z"/></svg>',
@@ -226,9 +211,9 @@ function cardHTML(id,rooms,price,unit,deal,specs,loc,chaps){
 }
 const strip=document.getElementById('strip');
 strip.innerHTML=
-  cardHTML('k0',['living','kitchen','bedroom','balcony'],'₪7,200','לחודש','rent','3 חדרים · 80 מ״ר · קומה 3','תל אביב · פלורנטין',['סלון','מטבח','חדר שינה','מרפסת'])+
-  cardHTML('k1',['balcony'],'₪3,150,000','','sale','4 חדרים · 105 מ״ר · קומה 12','רמת גן · הבורסה',null)+
-  cardHTML('k2',['bedroom'],'₪5,400','לחודש','rent','2.5 חדרים · 62 מ״ר','חיפה · כרמל',null);
+  cardHTML('card0',['living','kitchen','bedroom','balcony'],'₪7,200','לחודש','rent','3 חדרים · 80 מ״ר · קומה 3','תל אביב · פלורנטין',['סלון','מטבח','חדר שינה','מרפסת'])+
+  cardHTML('card1',['penthouse'],'₪3,150,000','','sale','4 חדרים · 105 מ״ר · קומה 12','רמת גן · הבורסה',null)+
+  cardHTML('card2',['building'],'₪8,900','לחודש','rent','3.5 חדרים · 95 מ״ר · קומה 2','תל אביב · לב העיר',null);
 
 /* ---------- timeline helpers ---------- */
 const $=id=>document.getElementById(id);
@@ -241,7 +226,7 @@ function text(el,t,a,b,dy=28,fi=.55,fo=.4){            /* slide-up in at a, fade
   const i=eo(P(t,a,a+fi)),o=P(t,b-fo,b);
   el.style.opacity=Math.min(i,1-o);el.style.transform=`translateY(${(1-i)*dy-o*14}px)`;
 }
-const k0=$('k0'),rooms0=[...k0.querySelectorAll('.room')],chips0=[...k0.querySelectorAll('.chap')],bars0=[...k0.querySelectorAll('.segs i')],flash0=k0.querySelector('.flash');
+const k0=$('card0'),rooms0=[...k0.querySelectorAll('.room')],chips0=[...k0.querySelectorAll('.chap')],bars0=[...k0.querySelectorAll('.segs i')],flash0=k0.querySelector('.flash');
 const ROOMS_T=[20.6,22.2,23.8,25.4];               /* room changes inside scene 5 */
 const ROOM_NAMES=['סלון','מטבח','חדר שינה','מרפסת'];
 
@@ -255,6 +240,10 @@ function render(t){
     const prog=eio(P(t,a,a+.35));el.style.width='300px';el.style.transform=`translateX(50%) scaleX(${prog})`;});
   ['p1','p2','p3'].forEach((id,i)=>{if(t>2.7+i*.25)$(id).style.color=`rgba(246,241,234,${1-.6*P(t,2.7+i*.25,3.2+i*.25)})`;});
   text($('p4'),t,3.7,5.4,24);
+
+  /* photo backgrounds: balcony behind S2, building behind the end card */
+  const a1=Math.min(eo(P(t,5.4,6.1)),1-P(t,8.7,9.2));$('bgA').style.opacity=a1;$('bgA').querySelector('img').style.transform=`scale(${1.04+.1*P(t,5.4,9.2)}) translateY(${-14*P(t,5.4,9.2)}px)`;
+  $('bgB').style.opacity=eo(P(t,40.9,41.8));$('bgB').querySelector('img').style.transform=`scale(${1.12-.08*P(t,40.9,45)})`;
 
   /* S2 5.6–9 */
   text($('q1'),t,5.7,9);text($('q2'),t,6.25,9,36);
@@ -286,6 +275,7 @@ function render(t){
   y-=610*eio(P(t,15.2,15.75));y-=610*eio(P(t,17.4,17.95));y+=1220*eio(P(t,19.6,20.15));
   strip.style.transform=`translateY(${y}px)`;
   text($('c1'),t,13,20.2);
+  ['card1','card2'].forEach((id,i)=>{const r=$(id).querySelector('.room');r.style.transform=`scale(${1.03+.08*P(t,14.6+i*2.2,20)})`;});
 
   /* S5 room chapters 20.2–27 */
   text($('c2'),t,20.4,27);
