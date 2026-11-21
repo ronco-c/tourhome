@@ -34,7 +34,8 @@
   .num{font-variant-numeric:tabular-nums}
   svg{display:block}
 
-  .app{position:fixed;inset:0;overflow:hidden;overflow:clip}
+  .app{position:fixed;inset:0;overflow:hidden;overflow:clip;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  .app input,.app textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
   .screen{position:absolute;inset:0 0 calc(var(--nav-h) + var(--nav-pb)) 0;overflow:hidden}
 
   /* ================= FEED ================= */
@@ -1235,6 +1236,7 @@ function resetWizard(){
 /* ================= CLEAN VIEW ================= */
 function setClean(on){
   const f=$('#feed'),idx=Math.round(f.scrollTop/(f.clientHeight||1));
+  if(on)try{window.getSelection().removeAllRanges();}catch{}
   $('#app').classList.toggle('clean',on);
   f.style.scrollSnapType='none';f.scrollTop=idx*f.clientHeight;          /* keep the same video in place after the resize */
   requestAnimationFrame(()=>{f.scrollTop=idx*f.clientHeight;f.style.scrollSnapType='';});
@@ -1334,6 +1336,8 @@ attachAC($('#fCity'),{regions:true,
 
 /* ================= BOOT ================= */
 async function load(){listings=await store.all();renderFeed();}
+/* iOS: a long press must never start a text selection (blue tint + handles) */
+document.addEventListener('selectstart',e=>{const t=e.target.nodeType===1?e.target:e.target.parentElement;if(!t||!t.closest('input,textarea'))e.preventDefault();});
 $('#app').addEventListener('scroll',e=>{e.currentTarget.scrollTop=0;e.currentTarget.scrollLeft=0;});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseAll();else if(current==='feed')playVisible();});
 if(!LS.get('onboarded',false)){$('#onb').classList.remove('hidden');}
