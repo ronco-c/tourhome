@@ -21,7 +21,7 @@
     --brand:#ff6b3d; --brand-soft:rgba(255,107,61,.16); --brand-ink:#fff;
     --gold:#ffc65c; --ok:#2fd27a; --danger:#ff5a6a;
     --r-sm:10px; --r:14px; --r-lg:22px;
-    --nav-h:62px; --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+    --nav-h:56px; --nav-pb:max(10px, calc(env(safe-area-inset-bottom, 0px) - 10px)); --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
     --ease:cubic-bezier(.2,.8,.2,1);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -35,7 +35,7 @@
   svg{display:block}
 
   .app{position:fixed;inset:0;overflow:hidden;overflow:clip}
-  .screen{position:absolute;inset:0 0 calc(var(--nav-h) + var(--safe-b)) 0;overflow:hidden}
+  .screen{position:absolute;inset:0 0 calc(var(--nav-h) + var(--nav-pb)) 0;overflow:hidden}
 
   /* ================= FEED ================= */
   #feed{height:100%;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none}
@@ -46,15 +46,17 @@
     background:linear-gradient(to top,rgba(8,7,6,.92) 0%,rgba(8,7,6,.55) 26%,rgba(8,7,6,0) 52%),
                linear-gradient(to bottom,rgba(8,7,6,.55) 0%,rgba(8,7,6,0) 16%)}
 
-  .topbar{position:absolute;top:0;left:0;right:0;z-index:6;padding:calc(8px + var(--safe-t)) 12px 8px;
-    display:grid;grid-template-columns:86px 1fr 86px;align-items:center;pointer-events:none}
+  .topbar{position:absolute;top:0;left:0;right:0;z-index:6;padding:calc(4px + var(--safe-t)) 16px 0;pointer-events:none;transition:background .2s}
+  .topbar.over{background:linear-gradient(to bottom,rgba(8,7,6,.62) 0%,rgba(8,7,6,.28) 70%,rgba(8,7,6,0) 100%)}
+  .tb-row{display:flex;align-items:center;justify-content:space-between;height:46px}
   .topbar>*{pointer-events:auto}
-  .topbar .iconbtn{justify-self:end}
-  .tabs{display:flex;justify-content:center;gap:16px}
-  .tabs button{font-size:16px;font-weight:600;color:var(--muted);padding:6px 0;position:relative;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+  .topbar.over .tabs button,.topbar.over .wordmark{text-shadow:0 1px 2px rgba(0,0,0,.45)}
+  .tabs{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid rgba(246,241,234,.12)}
+  .tabs button{height:42px;font-size:16px;font-weight:600;color:var(--muted);position:relative;letter-spacing:.1px}
   .tabs button.on{color:var(--ink);font-weight:800}
-  .tabs button.on::after{content:"";position:absolute;bottom:0;left:50%;width:20px;height:3px;margin-left:-10px;border-radius:2px;background:var(--ink)}
-  .iconbtn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;position:relative;background:rgba(0,0,0,.28);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  .tabs button.on::after{content:"";position:absolute;bottom:-1px;left:50%;width:44px;height:3px;margin-left:-22px;border-radius:3px 3px 0 0;background:var(--brand)}
+  .iconbtn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;position:relative;background:rgba(246,241,234,.08);border:1px solid rgba(246,241,234,.08)}
+  .topbar.over .iconbtn{background:rgba(0,0,0,.3);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
   .iconbtn svg{width:20px;height:20px}
   .iconbtn .dot{position:absolute;top:7px;right:7px;width:8px;height:8px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 2px #000}
 
@@ -98,7 +100,7 @@
   @keyframes pop{0%{opacity:0;transform:scale(.3) rotate(-12deg)}25%{opacity:1;transform:scale(1.1) rotate(0)}65%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.25) translateY(-30px)}}
   .paused-ind{position:absolute;left:50%;top:45%;width:76px;height:76px;margin:-38px 0 0 -38px;border-radius:50%;background:rgba(0,0,0,.35);display:grid;place-items:center;pointer-events:none}
   .paused-ind svg{width:34px;height:34px;margin-left:4px}
-  .roomflash{position:absolute;top:calc(64px + var(--safe-t));left:50%;transform:translate(-50%,-6px);padding:6px 14px;border-radius:999px;
+  .roomflash{position:absolute;top:calc(104px + var(--safe-t));left:50%;transform:translate(-50%,-6px);padding:6px 14px;border-radius:999px;
     background:rgba(0,0,0,.5);backdrop-filter:blur(10px);font-weight:700;font-size:14px;opacity:0;transition:all .3s var(--ease);pointer-events:none}
   .roomflash.show{opacity:1;transform:translate(-50%,0)}
 
@@ -119,12 +121,12 @@
   .btn svg{width:20px;height:20px}
 
   /* ================= NAV ================= */
-  nav{position:absolute;left:0;right:0;bottom:0;height:calc(var(--nav-h) + var(--safe-b));padding-bottom:var(--safe-b);
-    background:var(--bg);border-top:1px solid var(--line);display:flex;z-index:10}
-  nav button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;font-weight:600;color:var(--faint);transition:color .2s}
+  nav{position:absolute;left:0;right:0;bottom:0;height:calc(var(--nav-h) + var(--nav-pb));padding:0 6px var(--nav-pb);
+    background:rgba(13,12,11,.94);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border-top:1px solid var(--line);display:flex;align-items:stretch;z-index:10}
+  nav button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:10.5px;font-weight:600;letter-spacing:.2px;color:var(--faint);transition:color .2s}
   nav button.active{color:var(--ink)}
   nav svg{width:24px;height:24px}
-  nav .plus span{width:52px;height:36px;border-radius:12px;display:grid;place-items:center;background:var(--brand);color:#fff;box-shadow:0 6px 18px rgba(255,107,61,.35)}
+  nav .plus span{width:50px;height:34px;border-radius:11px;display:grid;place-items:center;background:var(--brand);color:#fff;box-shadow:0 6px 18px rgba(255,107,61,.35)}
   nav .plus svg{width:22px;height:22px}
 
   /* ================= PAGES ================= */
@@ -231,7 +233,7 @@
   .sheet .btns{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:16px}
   .linkbtn{display:block;margin:16px auto 0;font-size:13px;color:var(--faint);text-decoration:underline}
 
-  .toast{position:absolute;left:50%;top:calc(66px + var(--safe-t));transform:translate(-50%,-10px);background:var(--ink);color:#111;
+  .toast{position:absolute;left:50%;top:calc(104px + var(--safe-t));transform:translate(-50%,-10px);background:var(--ink);color:#111;
     padding:10px 16px;border-radius:999px;font-weight:700;font-size:14px;z-index:40;opacity:0;transition:all .25s var(--ease);pointer-events:none;white-space:nowrap}
   .toast.show{opacity:1;transform:translate(-50%,0)}
 
@@ -325,7 +327,7 @@
   .onb .brand{display:flex;align-items:center;gap:12px;direction:ltr;justify-content:flex-end}
   .onb .mark{width:52px;height:52px;color:var(--brand)}
   .wordmark{font-size:36px;font-weight:900;letter-spacing:-2px;line-height:1}
-  .wordmark.sm{font-size:16px;letter-spacing:-.6px;direction:ltr;text-shadow:0 1px 6px rgba(0,0,0,.5)}
+  .wordmark.sm{font-size:21px;font-weight:800;letter-spacing:-.4px;direction:ltr}
   .wordmark i{font-style:normal;color:var(--brand)}
   .onb h1{font-size:34px;line-height:1.1;font-weight:900;letter-spacing:-1px;margin:26px 0 10px}
   .onb h1 em{font-style:normal;color:var(--brand)}
@@ -337,6 +339,10 @@
   .onb .pt b{display:block;font-size:16px;margin-bottom:2px}
   .onb .pt span{font-size:14px;color:var(--muted);line-height:1.45}
 
+  @media (display-mode: standalone){
+    html,body{height:100lvh}
+    .app{bottom:auto;height:100lvh}
+  }
   @media (min-width:700px){
     body{background:radial-gradient(60% 60% at 50% 30%,#1e1712,#070605)}
     .app{left:50%;top:50%;width:400px;height:min(860px,96vh);transform:translate(-50%,-50%);border-radius:36px;
@@ -350,16 +356,18 @@
 <!-- ============ FEED ============ -->
 <section id="scr-feed" class="screen">
   <div class="topbar">
-    <span class="wordmark sm">tourhome<i>.</i></span>
-    <div class="tabs" id="dealTabs">
-      <button data-v="sale">למכירה</button>
-      <button data-v="rent">להשכרה</button>
-      <button data-v="" class="on">הכל</button>
+    <div class="tb-row">
+      <span class="wordmark sm">tourhome<i>.</i></span>
+      <button class="iconbtn" id="openFilter" aria-label="סינון">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>
+        <span class="dot hidden" id="filterDot"></span>
+      </button>
     </div>
-    <button class="iconbtn" id="openFilter" aria-label="סינון">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>
-      <span class="dot hidden" id="filterDot"></span>
-    </button>
+    <div class="tabs" id="dealTabs">
+      <button data-v="" class="on">הכל</button>
+      <button data-v="rent">להשכרה</button>
+      <button data-v="sale">למכירה</button>
+    </div>
   </div>
   <div id="feed"></div>
 </section>
@@ -668,6 +676,7 @@ $$('#dealTabs button').forEach(b=>b.onclick=()=>{filters.deal=b.dataset.v;LS.set
 function renderFeed(){
   const feed=$('#feed');io.disconnect();feed.innerHTML='';syncTabs();
   const items=listings.filter(matches).sort((a,b)=>(isBoosted(b)-isBoosted(a))||(b.created-a.created));
+  $('#scr-feed .topbar').classList.toggle('over',items.length>0);
   if(!items.length){
     const narrowed=filtersActive()||filters.deal;
     feed.innerHTML=`<div class="empty"><div class="art">${I.house}</div>
