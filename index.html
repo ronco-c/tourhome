@@ -385,6 +385,16 @@
   .ap-stats b{display:block;font-size:18px;font-weight:800}
   .ap-stats span{font-size:12px;color:var(--muted)}
 
+  /* ================= VIDEO QUALITY ================= */
+  .card.land video{object-fit:contain;background:#000}
+  .vq{margin-top:10px;padding:12px 14px;border-radius:var(--r-sm);font-size:13px;line-height:1.55;color:var(--muted)}
+  .vq b{color:var(--ink)}
+  .vq>b:first-child{display:block;margin-bottom:2px}
+  .vq.ok{background:rgba(47,210,122,.1)}
+  .vq.ok b{color:#8ff0b8}
+  .vq.low{background:rgba(255,198,92,.12)}
+  .vq.low>b:first-child{color:var(--gold)}
+
   /* ================= COMMENTS ================= */
   #cmtSheet{display:flex;flex-direction:column;height:72%;max-height:72%;overflow:hidden;padding-bottom:0}
   #cmtSheet h2{font-size:17px;text-align:center;margin:0 0 12px}
@@ -473,6 +483,7 @@
       </button>
       <div id="vp1" class="hidden"><div class="vp"><video id="prev1" playsinline muted loop autoplay></video><button class="x" id="clearVid">החלפה</button><span class="dur num" id="durLbl"></span></div></div>
       <div class="err" id="vidErr"></div>
+      <div class="vq hidden" id="vidQ"></div>
       <div class="rules">
         <div class="rule"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11l9-8 9 8M5 9.5V21h14V9.5"/></svg></span><div><b>רק דירות.</b> סיור אמיתי בנכס — חדרים, מטבח, מרפסת, נוף. בלי פרסומות ובלי תוכן אחר.</div></div>
         <div class="rule"><span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><div><b>עד 3 דקות.</b> 30–90 שניות זה האורך שהכי עובד.</div></div>
@@ -759,7 +770,7 @@ const io=new IntersectionObserver(es=>{es.forEach(e=>{
     bumpView(e.target.dataset.id);
   }else v.pause();
 });},{threshold:[0,.6,1]});
-async function ensureSrc(card){const v=card.querySelector('video');if(!v||v.src)return;v.src=await videoURL(card.dataset.id);}
+async function ensureSrc(card){const v=card.querySelector('video');if(!v||v.src)return;v.preload='auto';v.src=await videoURL(card.dataset.id);}
 function pauseAll(){$$('#feed video').forEach(v=>v.pause());}
 function playVisible(){const f=$('#feed');const c=f.children[Math.round(f.scrollTop/(f.clientHeight||1))];
   const v=c?.querySelector('video');if(v)ensureSrc(c).then(()=>safePlay(v));}
@@ -788,6 +799,7 @@ function renderFeed(){
 
 function buildCard(l){
   const c=document.createElement('article');c.className='card';c.dataset.id=l.id;
+  if(l.vw&&l.vh&&l.vw>l.vh*1.05)c.classList.add('land');   /* landscape: show it whole instead of a 3x crop */
   const ch=(l.chapters||[]).slice().sort((a,b)=>a.t-b.t);if(ch.length)c.classList.add('has-ch');
   const dur=l.duration||0;
   const segs=ch.length&&dur?ch.map((x,i)=>{const end=i<ch.length-1?ch[i+1].t:dur;return Math.max(.02,(end-(i?x.t:0))/dur);}):[1];
@@ -1234,7 +1246,8 @@ function pickVideo(file){
     if(d>MAX_SECONDS){$('#vidErr').textContent=`הסרטון ארוך מדי (${mmss(d)}). עד 3 דקות.`;URL.revokeObjectURL(url);return;}
     if(d&&d<MIN_SECONDS){$('#vidErr').textContent='הסרטון קצר מדי — הראו את הדירה לפחות כמה שניות.';URL.revokeObjectURL(url);return;}
     if(wiz.url)URL.revokeObjectURL(wiz.url);
-    Object.assign(wiz,{file,dur:d,url,chapters:[]});
+    Object.assign(wiz,{file,dur:d,url,chapters:[],vw:probe.videoWidth||0,vh:probe.videoHeight||0});
+    showQuality(wiz.vw,wiz.vh,file.size,d);
     $('#prev1').src=url;$('#durLbl').textContent=mmss(d);
     $('#drop').classList.add('hidden');$('#vp1').classList.remove('hidden');$('#wizNext').disabled=false;
   };
@@ -1271,7 +1284,7 @@ async function publish(){
   const l={id:crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2),
     deal:wiz.deal,owner:wiz.owner,city:fd.city.trim(),area:(fd.area||'').trim(),price:Number(fd.price),rooms:Number(fd.rooms),
     sqm:fd.sqm?Number(fd.sqm):'',floor:fd.floor===''?'':Number(fd.floor),entry:(fd.entry||'').trim(),features:[...wiz.feats],
-    desc:(fd.desc||'').trim(),name:fd.name.trim(),phone:fd.phone.trim(),chapters:c,duration:Math.round(wiz.dur*10)/10,
+    desc:(fd.desc||'').trim(),name:fd.name.trim(),phone:fd.phone.trim(),chapters:c,duration:Math.round(wiz.dur*10)/10,vw:wiz.vw||0,vh:wiz.vh||0,
     likes:0,views:0,created:Date.now(),stats:{wa:0,saves:0,watch:0,rooms:{}}};
   const me=getMe();
   if(l.owner==='agent'&&me.role==='agent'){l.agency=me.agency||'';l.plan=me.plan;l.verified=me.plan==='pro'||me.plan==='office';}
@@ -1288,8 +1301,22 @@ function resetWizard(){
   $('#upForm').reset();wiz.feats.clear();$$('#featChips .chip').forEach(c=>c.classList.remove('on'));
   if(wiz.url)URL.revokeObjectURL(wiz.url);Object.assign(wiz,{file:null,dur:0,url:'',chapters:[],deal:'rent',owner:defOwner()});
   segInit($('#dealSeg'),'rent',setDeal);setDeal('rent');segInit($('#ownerSeg'),wiz.owner,v=>wiz.owner=v);
-  $('#prev1').removeAttribute('src');$('#prev2').removeAttribute('src');$('#drop').classList.remove('hidden');$('#vp1').classList.add('hidden');
+  $('#prev1').removeAttribute('src');$('#prev2').removeAttribute('src');$('#drop').classList.remove('hidden');$('#vp1').classList.add('hidden');$('#vidQ').classList.add('hidden');
   wiz.step=1;
+}
+
+/* ================= VIDEO QUALITY ================= */
+/* iOS re-encodes videos picked from the Photos library in a web page (often to 720p).
+   We can't stop that, so we detect it and tell the uploader how to send the original. */
+function showQuality(w,h,bytes,dur){
+  const el=$('#vidQ');if(!w||!h){el.classList.add('hidden');return;}
+  const shortSide=Math.min(w,h),label=shortSide>=2000?'4K':shortSide>=1000?'1080p':shortSide>=700?'720p':shortSide+'p';
+  const mbps=dur?(bytes*8/dur/1e6):0,iOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const low=shortSide<1000||(mbps&&mbps<3);
+  el.className='vq '+(low?'low':'ok');
+  el.innerHTML=low
+    ?`<b>האיכות שהגיעה: ${label}${mbps?` · ${mbps.toFixed(1)}Mbps`:''}</b>${iOS?'האייפון מכווץ סרטונים שנבחרים מהגלריה. לאיכות מלאה: לחצו "החלפה", בחרו <b>"בחירת קובץ"</b> ואז את הסרטון מתוך <b>"קבצים"</b> (שמרו אותו קודם לקבצים דרך "שיתוף ← שמירה בקבצים").':'מומלץ להעלות סרטון ב־1080p לפחות, כפי שצולם במצלמה.'}`
+    :`<b>איכות מעולה: ${label}${mbps?` · ${mbps.toFixed(1)}Mbps`:''}</b>`;
 }
 
 /* ================= CLEAN VIEW ================= */
